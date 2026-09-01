@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão Escolar - Offline</title>
+    <!-- PWA: manifest, ícone e meta tags de instalação -->
+    <meta name="theme-color" content="#1a365d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sistema Escolar">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9Ijk2IiBmaWxsPSIjMWEzNjVkIi8+PHBhdGggZD0iTTI1NiAxNDAgTDQ0NiAyMTYgTDI1NiAyOTIgTDY2IDIxNiBaIiBmaWxsPSIjZmZmZmZmIi8+PHBhdGggZD0iTTE1MCAyNDYgdjg4IGMwIDM2IDQ3IDY2IDEwNiA2NiBzMTA2LTMwIDEwNi02NiB2LTg4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxsaW5lIHgxPSI0NDYiIHkxPSIyMTYiIHgyPSI0NDYiIHkyPSIzMzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNDQ2IiBjeT0iMzQ0IiByPSIxMiIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPgo=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9Ijk2IiBmaWxsPSIjMWEzNjVkIi8+PHBhdGggZD0iTTI1NiAxNDAgTDQ0NiAyMTYgTDI1NiAyOTIgTDY2IDIxNiBaIiBmaWxsPSIjZmZmZmZmIi8+PHBhdGggZD0iTTE1MCAyNDYgdjg4IGMwIDM2IDQ3IDY2IDEwNiA2NiBzMTA2LTMwIDEwNi02NiB2LTg4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxsaW5lIHgxPSI0NDYiIHkxPSIyMTYiIHgyPSI0NDYiIHkyPSIzMzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNDQ2IiBjeT0iMzQ0IiByPSIxMiIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPgo=">
+    <link rel="manifest" id="pwa-manifest-link">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -348,6 +357,7 @@
         }
 
         .text-amber { color: #b45309 !important; }
+        .freq-alert-laranja { background-color:#fd7e14 !important; color:#fff !important; }
         .border-amber { border-color: #d99a4e !important; }
 
         .col-validacao .input-nota {
@@ -962,7 +972,7 @@
                         <div class="card-custom p-4 border-start border-4 border-danger">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-muted fw-bold mb-1">Baixa frequência (&lt; 75%)</h6>
+                                    <h6 class="text-muted fw-bold mb-1">Baixa frequência (&lt; 85%)</h6>
                                     <h2 class="mb-0 fw-bold text-danger" id="dash-alerta-frequencia">0</h2>
                                 </div>
                                 <i class="fas fa-exclamation-triangle fa-2x text-danger opacity-50"></i>
@@ -1381,6 +1391,16 @@
                     <hr class="my-3">
 
                     <div class="border rounded p-3 mb-3 bg-light">
+                        <label class="form-label fw-bold mb-1" for="input-nome-escola">Nome da escola exibido no relatório</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="input-nome-escola" placeholder="Nome da escola">
+                            <button class="btn btn-primary" type="button" onclick="salvarNomeEscola()">
+                                <i class="fas fa-save me-1"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border rounded p-3 mb-3 bg-light">
                         <div class="row g-2 align-items-end">
                             <div class="col-md-8">
                                 <label class="form-label fw-bold mb-1">Relatório de todos os alunos ativos da turma</label>
@@ -1442,8 +1462,7 @@
                         <div class="pdf-header">
                             <div class="pdf-header-icon"><i class="fas fa-graduation-cap"></i></div>
                             <div class="pdf-header-text">
-                                <h3 class="m-0 fw-bold">E.E PROFESSORA ISABEL LUCCI DE OLIVEIRA</h3>
-                                <small>RELATÓRIO INDIVIDUAL DO ALUNO · DOCUMENTO PARA REGISTRO ESCOLAR E ASSINATURAS</small>
+                                <h3 class="m-0 fw-bold" id="pdf-nome-escola">E.E PROFESSORA ISABEL LUCCI DE OLIVEIRA</h3>
                             </div>
                         </div>
 
@@ -1578,11 +1597,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="pdf-footer">
-                            <span>Registro Escolar · Relatório Individual</span>
-                            <span>Documento gerado pelo Sistema de Gestão Escolar</span>
                         </div>
 
                     </div>
@@ -1756,8 +1770,13 @@
         </svg>
     `);
 
+    const NOME_ESCOLA_PADRAO = "E.E PROFESSORA ISABEL LUCCI DE OLIVEIRA";
+
     let db = {
-        alunos: []
+        alunos: [],
+        config: {
+            nomeEscola: NOME_ESCOLA_PADRAO
+        }
     };
 
     let fotoBase64Temp = "";
@@ -1979,6 +1998,8 @@
             const pacote = JSON.parse(texto);
             const { fotos, ...resto } = pacote;
             db = Array.isArray(resto.alunos) ? resto : { alunos: [] };
+            if (!db.config) db.config = {};
+            if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
             if (fotos) {
                 for (const [alunoId, dataUrl] of Object.entries(fotos)) {
                     await salvarFotoDB(alunoId, dataUrl);
@@ -2366,6 +2387,9 @@
         atualizarDashboard();
         populasSelectsAlunos();
 
+        const inputNomeEscola = document.getElementById('input-nome-escola');
+        if (inputNomeEscola) inputNomeEscola.value = (db.config && db.config.nomeEscola) ? db.config.nomeEscola : NOME_ESCOLA_PADRAO;
+
         const plantaoTabEl = document.getElementById('plantao-tab');
         if (plantaoTabEl) {
             plantaoTabEl.addEventListener('shown.bs.tab', () => {
@@ -2394,6 +2418,20 @@
                 console.error("Erro ao ler banco local", e);
             }
         }
+        if (!db.config) db.config = {};
+        if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
+    }
+
+    function salvarNomeEscola() {
+        const input = document.getElementById('input-nome-escola');
+        const nome = (input.value || '').trim();
+        if (!db.config) db.config = {};
+        db.config.nomeEscola = nome || NOME_ESCOLA_PADRAO;
+        input.value = db.config.nomeEscola;
+        const nomeEscolaEl = document.getElementById('pdf-nome-escola');
+        if (nomeEscolaEl) nomeEscolaEl.innerText = db.config.nomeEscola;
+        salvarDB();
+        alert('Nome da escola atualizado com sucesso!');
     }
 
     function salvarDB() {
@@ -3105,16 +3143,29 @@
                     <td>${aluno.serie}</td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
-                            <input type="radio" class="btn-check" name="pres_${aluno.id}" id="p_${aluno.id}" value="P" ${statusSalvo === 'P' ? 'checked' : ''} onchange="salvarChamadaIndividual('${aluno.id}', 'P')">
+                            <input type="radio" class="btn-check" name="pres_${aluno.id}" id="p_${aluno.id}" value="P" ${statusSalvo === 'P' ? 'checked' : ''} onclick="alternarChamada('${aluno.id}', 'P', this)">
                             <label class="btn btn-outline-success btn-sm" for="p_${aluno.id}">Presente</label>
 
-                            <input type="radio" class="btn-check" name="pres_${aluno.id}" id="f_${aluno.id}" value="F" ${statusSalvo === 'F' ? 'checked' : ''} onchange="salvarChamadaIndividual('${aluno.id}', 'F')">
+                            <input type="radio" class="btn-check" name="pres_${aluno.id}" id="f_${aluno.id}" value="F" ${statusSalvo === 'F' ? 'checked' : ''} onclick="alternarChamada('${aluno.id}', 'F', this)">
                             <label class="btn btn-outline-danger btn-sm" for="f_${aluno.id}">Ausente</label>
                         </div>
                     </td>
                 </tr>
             `;
         });
+    }
+
+    function alternarChamada(alunoId, val, el) {
+        const data = document.getElementById('dataChamada').value;
+        if (!data) return;
+        const aluno = db.alunos.find(a => a.id === alunoId);
+        if (!aluno) return;
+        const atual = aluno.presencas && aluno.presencas[data] ? aluno.presencas[data] : null;
+        if (atual === val) {
+            if (aluno.presencas) delete aluno.presencas[data];
+            salvarDB();
+            carregarChamadaData();
+        } else salvarChamadaIndividual(alunoId, val);
     }
 
     function salvarChamadaIndividual(alunoId, val) {
@@ -3162,16 +3213,30 @@
                     <td>${aluno.serie}</td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
-                            <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_p_${aluno.id}" value="P" ${temRegistro ? 'checked' : ''} onchange="alterarPlantaoIndividual('${aluno.id}', 'P')">
+                            <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_p_${aluno.id}" value="P" ${temRegistro ? 'checked' : ''} onclick="alternarPlantao('${aluno.id}', 'P', this)">
                             <label class="btn btn-outline-success btn-sm" for="pl_p_${aluno.id}">Presente</label>
 
-                            <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_f_${aluno.id}" value="F" onchange="alterarPlantaoIndividual('${aluno.id}', 'F')">
+                            <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_f_${aluno.id}" value="F" onclick="alternarPlantao('${aluno.id}', 'F', this)">
                             <label class="btn btn-outline-danger btn-sm" for="pl_f_${aluno.id}">Ausente</label>
                         </div>
                     </td>
                 </tr>
             `;
         });
+    }
+
+    function alternarPlantao(alunoId, statusVal, el) {
+        const data = document.getElementById('dataPlantao').value;
+        const materia = document.getElementById('filtroMateriaPlantao').value;
+        if (!data || !materia) return;
+        const aluno = db.alunos.find(a => a.id === alunoId);
+        if (!aluno) return;
+        const jaExiste = (aluno.plantoes || []).some(p => p.materia === materia && p.data === data);
+        if (statusVal === 'P' && jaExiste) {
+            aluno.plantoes = aluno.plantoes.filter(p => !(p.materia === materia && p.data === data));
+            salvarDB();
+            carregarPlantaoData();
+        } else alterarPlantaoIndividual(alunoId, statusVal);
     }
 
     function alterarPlantaoIndividual(alunoId, statusVal) {
@@ -3490,6 +3555,7 @@
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
 
+        document.getElementById('pdf-nome-escola').innerText = (db.config && db.config.nomeEscola) ? db.config.nomeEscola : NOME_ESCOLA_PADRAO;
         document.getElementById('pdf-nome').innerText = aluno.nome;
         document.getElementById('pdf-ra').innerText = aluno.ra;
         document.getElementById('pdf-serie').innerText = aluno.serie;
@@ -3915,7 +3981,7 @@
         if (datas.length > 0) {
             const presentes = datas.filter(d => presencas[d] === 'P').length;
             const pct = (presentes / datas.length) * 100;
-            if (pct < 75) {
+            if (pct < 85) {
                 pendencias.push("Baixa frequência");
             }
         }
@@ -3973,7 +4039,7 @@
             const numLimpo = a.telefone ? a.telefone.replace(/\D/g, '') : '';
             const linkZap = numLimpo ? `https://wa.me/55${numLimpo}?text=Olá,%20entramos%20em%20contato%20a%20respeito%20do(a)%20aluno(a)%20${encodeURIComponent(a.nome)}` : '#';
             const temEmail = !!(a.email && a.email.trim());
-            const mailtoLink = temEmail ? `mailto:${a.email}?subject=${encodeURIComponent('Contato sobre ' + a.nome)}` : '#';
+            const mailtoLink = temEmail ? `mailto:${encodeURIComponent(a.email.trim())}?subject=${encodeURIComponent('Contato sobre ' + a.nome)}` : '#';
 
             const pendencias = verificarPendenciaAluno(a);
 
@@ -4022,7 +4088,7 @@
                                 </button>
                             `}
                             ${temEmail ? `
-                                <a href="${mailtoLink}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Enviar e-mail">
+                                <a href="${mailtoLink}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Enviar e-mail" target="_blank">
                                     <i class="fas fa-envelope fs-2"></i>
                                 </a>
                             ` : `
@@ -4052,6 +4118,8 @@
         listFreq.innerHTML = '';
         listNotas.innerHTML = '';
 
+        const alertasFreq = [];
+
         alunosAtivos.forEach(aluno => {
             const presencas = aluno.presencas || {};
             const datas = Object.keys(presencas);
@@ -4059,19 +4127,8 @@
                 const presentes = datas.filter(d => presencas[d] === 'P').length;
                 const pct = (presentes / datas.length) * 100;
 
-                if (pct < 75) {
-                    totalAlertaFreq++;
-                    listFreq.innerHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <a href="#" class="fw-bold text-decoration-none text-primary" onclick="irParaFrequenciaDoAluno('${aluno.id}'); return false;">
-                                    <i class="fas fa-external-link-alt me-1 fs-xs"></i>${aluno.nome}
-                                </a> (${aluno.serie})
-                                <br><small class="text-muted">${presentes} presenças em ${datas.length} dias registrados</small>
-                            </div>
-                            <span class="badge bg-danger rounded-pill">${pct.toFixed(0)}% Freq.</span>
-                        </li>
-                    `;
+                if (pct < 85) {
+                    alertasFreq.push({ aluno, pct, presentes, totalDias: datas.length });
                 }
             }
 
@@ -4105,6 +4162,22 @@
             }
         });
 
+        alertasFreq.sort((a, b) => a.pct - b.pct);
+        totalAlertaFreq = alertasFreq.length;
+        alertasFreq.forEach(({ aluno, pct, presentes, totalDias }) => {
+            listFreq.innerHTML += `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <a href="#" class="fw-bold text-decoration-none text-primary" onclick="irParaFrequenciaDoAluno('${aluno.id}'); return false;">
+                            <i class="fas fa-external-link-alt me-1 fs-xs"></i>${aluno.nome}
+                        </a> (${aluno.serie})
+                        <br><small class="text-muted">${presentes} presenças em ${totalDias} dias registrados</small>
+                    </div>
+                    <span class="badge rounded-pill ${pct < 75 ? 'bg-danger' : 'freq-alert-laranja'}">${pct.toFixed(0)}% Freq.</span>
+                </li>
+            `;
+        });
+
         document.getElementById('dash-alerta-frequencia').innerText = totalAlertaFreq;
         document.getElementById('dash-alerta-notas').innerText = totalAlertaNota;
 
@@ -4112,5 +4185,78 @@
         if (listNotas.innerHTML === '') listNotas.innerHTML = '<li class="list-group-item text-muted text-center py-3">Nenhum aluno ativo em situação de alerta de notas.</li>';
     }
 </script>
+    <!-- --- PWA: manifest + service worker gerados em tempo de execução --- -->
+    <!-- Como este sistema é distribuído como um único arquivo HTML, o manifest
+         e o service worker são criados dinamicamente (via Blob) em vez de
+         serem arquivos separados. Isso permite "Instalar app" / "Adicionar à
+         tela inicial" no navegador. O cache offline do service worker só
+         funciona quando o arquivo é aberto por http(s) (ex.: um servidor local
+         ou hospedagem), pois navegadores bloqueiam service workers no
+         protocolo file://. Aberto direto como arquivo, o sistema continua
+         funcionando normalmente — só a instalação/cache via service worker
+         fica indisponível. -->
+    <script>
+        (function configurarPWA() {
+            try {
+                const manifest = {
+                    name: "Sistema de Gestão Escolar",
+                    short_name: "Gestão Escolar",
+                    description: "Sistema offline de gestão escolar (notas, frequência, relatórios).",
+                    start_url: location.pathname + location.search,
+                    scope: location.pathname.replace(/[^/]*$/, ''),
+                    display: "standalone",
+                    background_color: "#f0f4f8",
+                    theme_color: "#1a365d",
+                    icons: [
+                        {
+                            src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9Ijk2IiBmaWxsPSIjMWEzNjVkIi8+PHBhdGggZD0iTTI1NiAxNDAgTDQ0NiAyMTYgTDI1NiAyOTIgTDY2IDIxNiBaIiBmaWxsPSIjZmZmZmZmIi8+PHBhdGggZD0iTTE1MCAyNDYgdjg4IGMwIDM2IDQ3IDY2IDEwNiA2NiBzMTA2LTMwIDEwNi02NiB2LTg4IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxsaW5lIHgxPSI0NDYiIHkxPSIyMTYiIHgyPSI0NDYiIHkyPSIzMzAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNDQ2IiBjeT0iMzQ0IiByPSIxMiIgZmlsbD0iI2ZmZmZmZiIvPjwvc3ZnPgo=",
+                            sizes: "any",
+                            type: "image/svg+xml",
+                            purpose: "any maskable"
+                        }
+                    ]
+                };
+                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+                const manifestLink = document.getElementById('pwa-manifest-link');
+                if (manifestLink) manifestLink.href = URL.createObjectURL(manifestBlob);
+
+                if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+                    const swCode = `
+                        const CACHE_NOME = 'gestao-escolar-cache-v1';
+                        self.addEventListener('install', (event) => {
+                            self.skipWaiting();
+                            event.waitUntil(
+                                caches.open(CACHE_NOME).then((cache) => cache.add(self.registration.scope))
+                            );
+                        });
+                        self.addEventListener('activate', (event) => {
+                            event.waitUntil(self.clients.claim());
+                        });
+                        self.addEventListener('fetch', (event) => {
+                            if (event.request.method !== 'GET') return;
+                            event.respondWith(
+                                caches.match(event.request).then((cacheado) => {
+                                    const buscaRede = fetch(event.request).then((resposta) => {
+                                        if (resposta && resposta.ok) {
+                                            caches.open(CACHE_NOME).then((cache) => cache.put(event.request, resposta.clone()));
+                                        }
+                                        return resposta;
+                                    }).catch(() => cacheado);
+                                    return cacheado || buscaRede;
+                                })
+                            );
+                        });
+                    `;
+                    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl).catch((err) => {
+                        console.warn('Não foi possível registrar o service worker do PWA:', err);
+                    });
+                }
+            } catch (e) {
+                console.warn('Não foi possível configurar o PWA (manifest/service worker):', e);
+            }
+        })();
+    </script>
 </body>
 </html>
