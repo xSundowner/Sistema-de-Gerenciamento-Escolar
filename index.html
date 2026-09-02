@@ -3415,12 +3415,15 @@
         const aviso = document.getElementById('aviso-bloqueio-notas');
         const texto = document.getElementById('aviso-bloqueio-notas-texto');
         const painel = document.getElementById('painel-notas-container');
-        if (mensagem) {
-            // Proteção extra: nunca deixa a barra aparecer sem nenhum texto.
-            texto.textContent = mensagem.trim() ? mensagem : 'Este aluno está sendo editado por outra pessoa agora. Aguarde.';
+        // Sem mensagem de verdade (vazia ou só espaços): trata como "não
+        // bloqueado" e esconde a barra inteira — nunca mostra só o cadeado
+        // sem explicação nenhuma.
+        if (mensagem && mensagem.trim()) {
+            texto.textContent = mensagem;
             aviso.style.display = 'flex';
             painel.classList.add('notas-bloqueadas');
         } else {
+            texto.textContent = '';
             aviso.style.display = 'none';
             painel.classList.remove('notas-bloqueadas');
         }
