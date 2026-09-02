@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão Escolar - Offline</title>
+    <title>Sistema de Gestão Escolar</title>
     <!-- PWA: manifest, ícone e meta tags de instalação -->
     <meta name="theme-color" content="#1a365d">
     <meta name="mobile-web-app-capable" content="yes">
@@ -83,6 +83,9 @@
             padding: 0 6px 6px;
         }
 
+        /* Esconde tudo que é exclusivo do admin quando o usuário logado é professor */
+        body.modo-professor .apenas-admin { display: none !important; }
+
         .sidebar-status-line {
             display: flex;
             align-items: center;
@@ -135,6 +138,18 @@
 
         .main-content {
             padding: 25px;
+        }
+
+        /* Barra superior mobile: escondida por padrão (desktop). Só aparece
+           dentro do @media (max-width:768px) mais abaixo — não afeta o desktop. */
+        .mobile-topbar { display: none; }
+        .sidebar-overlay-mobile { display: none; }
+
+        /* Painel de notas bloqueado (outro usuário editando aquele aluno agora) */
+        #painel-notas-container.notas-bloqueadas {
+            pointer-events: none;
+            opacity: .55;
+            user-select: none;
         }
 
         .card-custom {
@@ -768,15 +783,74 @@
         }
 
         @media (max-width: 768px) {
+            .mobile-topbar {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                position: sticky;
+                top: 0;
+                z-index: 1035;
+                background: var(--primary-color);
+                color: #fff;
+                padding: 12px 16px;
+            }
+            .mobile-topbar-btn {
+                background: rgba(255,255,255,.14);
+                border: none;
+                color: #fff;
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 17px;
+                flex-shrink: 0;
+            }
+            .mobile-topbar-title {
+                font-weight: 700;
+                font-size: 1rem;
+            }
             .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 82%;
+                max-width: 300px;
+                height: 100vh;
                 min-height: auto;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+                z-index: 1045;
+            }
+            .sidebar.sidebar-aberta {
+                transform: translateX(0);
+                box-shadow: 6px 0 24px rgba(0,0,0,.28);
+            }
+            .sidebar-overlay-mobile.aberta {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15,23,42,.45);
+                z-index: 1040;
             }
             .main-content {
                 margin-left: 0;
                 width: 100%;
+                padding: 16px;
+            }
+            /* Cabeçalhos de seção (título + botões) quebram linha em vez de espremer */
+            .main-content .d-flex.justify-content-between {
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+            .main-content .d-flex.justify-content-between > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .main-content h3 {
+                font-size: 1.25rem;
             }
         }
     
@@ -856,6 +930,11 @@
 
         <!-- Login normal -->
         <div id="auth-form-login">
+            <label class="auth-form-label">E-mail</label>
+            <div class="auth-input-wrap">
+                <i class="fas fa-user"></i>
+                <input type="email" id="auth-email-login" class="form-control auth-input" placeholder="seu@email.com" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('auth-senha-login').focus();">
+            </div>
             <label class="auth-form-label">Senha de acesso</label>
             <div class="auth-input-wrap">
                 <i class="fas fa-lock"></i>
@@ -863,40 +942,48 @@
             </div>
             <div id="auth-login-erro" class="text-danger small mb-3" style="display:none;"></div>
             <button class="btn btn-primary auth-submit w-100 mb-3" type="button" onclick="fazerLogin()"><i class="fas fa-arrow-right-to-bracket me-2"></i> Entrar no sistema</button>
-            <div class="text-center"><a href="#" class="small auth-link" onclick="mostrarTelaRecuperacao(); return false;">Esqueci minha senha</a></div>
-            <div class="auth-security"><i class="fas fa-shield-halved"></i> Acesso restrito ao ambiente escolar</div>
+            <div class="text-center mb-2"><a href="#" class="small auth-link" onclick="mostrarTelaRecuperacao(); return false;">Esqueci minha senha</a></div>
+            <div class="auth-security"><i class="fas fa-shield-halved"></i> Acesso restrito ao ambiente escolar — contas criadas apenas pelo administrador</div>
         </div>
 
-        <!-- Criação de senha (primeiro acesso) -->
-        <div id="auth-form-criar" style="display:none;">
-            <p class="text-muted small">Primeiro acesso: crie uma senha para proteger o sistema.</p>
-            <label class="form-label fw-bold">Nova senha</label>
-            <input type="password" id="auth-nova-senha" class="form-control mb-2" placeholder="Mínimo 4 caracteres" onkeydown="if(event.key==='Enter') document.getElementById('auth-confirmar-senha').focus();">
-            <label class="form-label fw-bold">Confirmar senha</label>
-            <input type="password" id="auth-confirmar-senha" class="form-control mb-2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter') criarSenhaInicial();">
-            <div id="auth-criar-erro" class="text-danger small mb-2" style="display:none;"></div>
-            <button class="btn btn-success w-100" type="button" onclick="criarSenhaInicial()"><i class="fas fa-check me-1"></i> Criar Senha e Entrar</button>
-        </div>
 
-        <!-- Recuperação via senha mestra -->
+
+        <!-- Recuperação de senha via e-mail (Supabase Auth) -->
         <div id="auth-form-recuperar" style="display:none;">
-            <p class="text-muted small">Digite a senha mestra para redefinir sua senha de acesso.</p>
-            <label class="form-label fw-bold">Senha mestra</label>
-            <input type="password" id="auth-senha-mestra" class="form-control mb-2">
-            <label class="form-label fw-bold">Nova senha</label>
-            <input type="password" id="auth-recup-nova-senha" class="form-control mb-2" placeholder="Mínimo 4 caracteres">
-            <label class="form-label fw-bold">Confirmar nova senha</label>
-            <input type="password" id="auth-recup-confirmar-senha" class="form-control mb-2" onkeydown="if(event.key==='Enter') redefinirSenhaComMestra();">
+            <p class="text-muted small">Digite seu e-mail para receber um link de redefinição de senha.</p>
+            <label class="form-label fw-bold">E-mail</label>
+            <input type="email" id="auth-recup-email" class="form-control mb-2" placeholder="seu@email.com" onkeydown="if(event.key==='Enter') enviarRecuperacaoSenha();">
             <div id="auth-recup-erro" class="text-danger small mb-2" style="display:none;"></div>
-            <button class="btn btn-warning w-100 mb-2" type="button" onclick="redefinirSenhaComMestra()"><i class="fas fa-key me-1"></i> Redefinir Senha</button>
+            <div id="auth-recup-sucesso" class="text-success small mb-2" style="display:none;"></div>
+            <button class="btn btn-warning w-100 mb-2" type="button" onclick="enviarRecuperacaoSenha()"><i class="fas fa-key me-1"></i> Enviar link de redefinição</button>
             <div class="text-center">
                 <a href="#" class="small" onclick="mostrarTelaLogin(); return false;">Voltar ao login</a>
             </div>
+        </div>
+
+        <!-- Definir nova senha (chegando pelo link de redefinição por e-mail) -->
+        <div id="auth-form-nova-senha-recuperacao" style="display:none;">
+            <p class="text-muted small">Defina sua nova senha de acesso.</p>
+            <label class="form-label fw-bold">Nova senha</label>
+            <input type="password" id="auth-nova-senha-recuperacao" class="form-control mb-2" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+            <label class="form-label fw-bold">Confirmar nova senha</label>
+            <input type="password" id="auth-confirmar-nova-senha-recuperacao" class="form-control mb-2" autocomplete="new-password" onkeydown="if(event.key==='Enter') salvarNovaSenhaRecuperacao();">
+            <div id="auth-nova-senha-recuperacao-erro" class="text-danger small mb-2" style="display:none;"></div>
+            <button class="btn btn-warning w-100" type="button" onclick="salvarNovaSenhaRecuperacao()"><i class="fas fa-key me-1"></i> Salvar nova senha</button>
         </div>
     </div>
 </div>
 
 <div id="app-container" class="container-fluid" style="display:none;">
+    <!-- Barra superior só para celular (some no desktop via CSS) -->
+    <div class="mobile-topbar">
+        <button type="button" class="mobile-topbar-btn" onclick="toggleSidebarMobile()" aria-label="Abrir menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <i class="fas fa-graduation-cap"></i>
+        <span class="mobile-topbar-title">Gestão Escolar</span>
+    </div>
+    <div class="sidebar-overlay-mobile" onclick="fecharSidebarMobile()"></div>
     <div class="row">
         <!-- Sidebar Navigation -->
         <nav class="col-md-3 col-lg-2 sidebar">
@@ -923,16 +1010,19 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#" onclick="showSection('buscativa', this)"><i class="fab fa-whatsapp me-2"></i> Buscativa</a>
                 </li>
+                <li class="nav-item apenas-admin">
+                    <a class="nav-link" href="#" onclick="showSection('usuarios', this)"><i class="fas fa-users-gear me-2"></i> Usuários</a>
+                </li>
                 <li class="nav-item mt-4 pt-2">
                     <div class="sidebar-util-block">
-                        <div class="sidebar-util-label">Arquivo de dados</div>
-                        <div id="indicador-arquivo-local" class="sidebar-status-line text-muted">
-                            <i class="fas fa-ban"></i>Verificando suporte do navegador...
+                        <div class="sidebar-util-label">Conta</div>
+                        <div id="indicador-conta" class="sidebar-status-line sidebar-status-success">
+                            <i class="fas fa-cloud"></i>Conectado
                         </div>
-                        <div id="acoes-arquivo-local" class="d-flex flex-column"></div>
+                        <a class="sidebar-util-link" href="#" onclick="sair(); return false;"><i class="fas fa-right-from-bracket"></i>Sair</a>
                     </div>
-                    <div class="sidebar-divider"></div>
-                    <div class="sidebar-util-block">
+                    <div class="sidebar-divider apenas-admin"></div>
+                    <div class="sidebar-util-block apenas-admin">
                         <div class="sidebar-util-label">Backup</div>
                         <a class="sidebar-util-link" href="#" onclick="exportarBackup()"><i class="fas fa-download"></i>Baixar Backup</a>
                         <a class="sidebar-util-link" href="#" onclick="document.getElementById('importFile').click()"><i class="fas fa-upload"></i>Restaurar Backup</a>
@@ -1026,7 +1116,7 @@
                     <h3><i class="fas fa-user-graduate me-2 text-primary"></i>Cadastro de Alunos</h3>
                     <div>
                         <button class="btn btn-success me-2" onclick="exportarExcelAlunosFiltrados()"><i class="fas fa-file-excel me-1"></i> Exportar Excel</button>
-                        <button class="btn btn-primary" onclick="abrirModalAluno()"><i class="fas fa-plus me-1"></i> Novo Aluno</button>
+                        <button class="btn btn-primary apenas-admin" onclick="abrirModalAluno()"><i class="fas fa-plus me-1"></i> Novo Aluno</button>
                     </div>
                 </div>
 
@@ -1259,6 +1349,11 @@
                             <option value="">-- Escolha um Aluno --</option>
                         </select>
                     </div>
+                </div>
+
+                <div id="aviso-bloqueio-notas" class="alert alert-warning d-flex align-items-center gap-2 mb-4" style="display:none;">
+                    <i class="fas fa-lock"></i>
+                    <span id="aviso-bloqueio-notas-texto"></span>
                 </div>
 
                 <div id="painel-notas-container" style="display:none;">
@@ -1630,6 +1725,49 @@
                 </div>
             </div>
 
+            <!-- SECTION: USUÁRIOS (SOMENTE ADMIN) -->
+            <div id="sec-usuarios" class="content-section" style="display:none;">
+                <h3 class="mb-4"><i class="fas fa-users-gear me-2 text-primary"></i>Usuários do Sistema</h3>
+
+                <div class="card-custom p-3 mb-4">
+                    <h6 class="fw-bold mb-3">Criar novo usuário</h6>
+                    <form onsubmit="criarUsuario(event)">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">E-mail</label>
+                                <input type="email" id="novoUsuarioEmail" class="form-control" required placeholder="professor@email.com">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Senha provisória</label>
+                                <input type="text" id="novoUsuarioSenha" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Papel</label>
+                                <select id="novoUsuarioPapel" class="form-select">
+                                    <option value="professor" selected>Professor (só visualiza / não mexe no cadastro)</option>
+                                    <option value="admin">Administrador (acesso total)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-user-plus me-1"></i>Criar</button>
+                            </div>
+                        </div>
+                        <div id="criarUsuarioErro" class="text-danger small mt-2" style="display:none;"></div>
+                        <div class="text-muted small mt-2">Repasse o e-mail e a senha provisória para a pessoa; ela pode trocar a senha depois em "Esqueci minha senha" na tela de login.</div>
+                    </form>
+                </div>
+
+                <div class="card-custom p-3">
+                    <h6 class="fw-bold mb-3">Usuários cadastrados</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead><tr><th>E-mail</th><th>Papel</th><th class="text-center">Ações</th></tr></thead>
+                            <tbody id="tabelaUsuarios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 </div>
@@ -1753,6 +1891,7 @@
 
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
     // --- ESTADO & CONFIGURAÇÕES ---
@@ -1772,6 +1911,31 @@
 
     const NOME_ESCOLA_PADRAO = "E.E PROFESSORA ISABEL LUCCI DE OLIVEIRA";
 
+    // --- SUPABASE: BACKEND NA NUVEM (substitui localStorage/IndexedDB/arquivo local) ---
+    // A "anon key" é uma chave pública, feita para ficar no código do navegador.
+    // A segurança real vem das políticas de RLS configuradas no banco (só usuário
+    // autenticado lê/escreve), não do sigilo dessa chave.
+    const SUPABASE_URL = "https://ehpkhhyrdsdjxeaiufjd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocGtoaHlyZHNkanhlYWl1ZmpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMjkyMDksImV4cCI6MjEwMzkwNTIwOX0.nErlNN13zLcB597aQog-9GGOoLBB0SgGy1Ae6QynZQk";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Cliente secundário, sem persistir sessão: usado só quando o admin cria
+    // uma conta nova (auth.signUp), para não substituir a sessão do próprio
+    // admin no navegador.
+    const supabaseAdminAux = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+    const SISTEMA_DADOS_ID = "principal"; // linha única, compartilhada entre todos os usuários da escola
+    const FOTOS_BUCKET = "fotos";
+    let papelUsuario = 'professor'; // 'admin' | 'professor', definido após login
+
+    // --- BLOQUEIO DE EDIÇÃO DE NOTAS (evita dois usuários editando o mesmo aluno) ---
+    const BLOQUEIO_STALE_MS = 60000;   // lock sem "sinal de vida" há mais de 60s é considerado abandonado
+    const BLOQUEIO_HEARTBEAT_MS = 20000; // renova o próprio lock a cada 20s enquanto a tela está aberta
+    const BLOQUEIO_POLL_MS = 8000;     // enquanto BLOQUEADO por outro, verifica a cada 8s se já liberou
+    let bloqueioAtual = null;   // { alunoId } — aluno cujo lock EU seguro agora
+    let bloqueioHeartbeatId = null;
+    let bloqueioPollId = null;
+
     let db = {
         alunos: [],
         config: {
@@ -1784,377 +1948,103 @@
     let calendarioMesAtual = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     let calendarioDataSelecionada = null;
 
-    // --- FOTOS: ARMAZENAMENTO EM INDEXEDDB (fora do localStorage) ---
-    // As fotos não ficam mais dentro de "db" (localStorage, limite ~5-10MB).
-    // Elas vivem no IndexedDB (limite muito maior) e ficam espelhadas aqui em
-    // memória (fotosCache) para que todo o código de renderização existente
-    // continue lendo a foto de forma síncrona, sem precisar virar async.
-    const FOTOS_DB_NOME = "escola_offline_fotos";
-    const FOTOS_STORE = "fotos";
+    // --- FOTOS: ARMAZENAMENTO NO SUPABASE STORAGE ---
+    // As fotos não ficam dentro de "db" (que vai inteiro pro banco a cada
+    // salvarDB) nem em IndexedDB local. Elas vivem num bucket privado do
+    // Supabase Storage e ficam espelhadas aqui em memória (fotosCache) para
+    // que todo o código de renderização existente continue lendo a foto de
+    // forma síncrona, sem precisar virar async.
     let fotosCache = {}; // { alunoId: dataURL }
-    let fotosDBConn = null;
 
-    function abrirFotosDB() {
+    function blobParaDataUrl(blob) {
         return new Promise((resolve, reject) => {
-            if (fotosDBConn) { resolve(fotosDBConn); return; }
-            const req = indexedDB.open(FOTOS_DB_NOME, 1);
-            req.onupgradeneeded = () => {
-                const dbConn = req.result;
-                if (!dbConn.objectStoreNames.contains(FOTOS_STORE)) {
-                    dbConn.createObjectStore(FOTOS_STORE);
-                }
-            };
-            req.onsuccess = () => { fotosDBConn = req.result; resolve(fotosDBConn); };
-            req.onerror = () => reject(req.error);
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
         });
     }
 
     async function salvarFotoDB(alunoId, dataUrl) {
-        const dbConn = await abrirFotosDB();
-        return new Promise((resolve, reject) => {
-            const tx = dbConn.transaction(FOTOS_STORE, "readwrite");
-            tx.objectStore(FOTOS_STORE).put(dataUrl, alunoId);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
+        const blob = await (await fetch(dataUrl)).blob();
+        const { error } = await supabaseClient.storage
+            .from(FOTOS_BUCKET)
+            .upload(`${alunoId}.jpg`, blob, { upsert: true, contentType: 'image/jpeg' });
+        if (error) { console.error("Erro ao enviar foto para o Supabase Storage", error); throw error; }
+        fotosCache[alunoId] = dataUrl;
     }
 
     async function excluirFotoDB(alunoId) {
-        const dbConn = await abrirFotosDB();
-        return new Promise((resolve, reject) => {
-            const tx = dbConn.transaction(FOTOS_STORE, "readwrite");
-            tx.objectStore(FOTOS_STORE).delete(alunoId);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
+        const { error } = await supabaseClient.storage.from(FOTOS_BUCKET).remove([`${alunoId}.jpg`]);
+        if (error) console.error("Erro ao excluir foto do Supabase Storage", error);
+        delete fotosCache[alunoId];
     }
 
     async function carregarTodasFotosDB() {
-        const dbConn = await abrirFotosDB();
-        return new Promise((resolve, reject) => {
-            const cache = {};
-            const tx = dbConn.transaction(FOTOS_STORE, "readonly");
-            const store = tx.objectStore(FOTOS_STORE);
-            const cursorReq = store.openCursor();
-            cursorReq.onsuccess = (e) => {
-                const cursor = e.target.result;
-                if (cursor) {
-                    cache[cursor.key] = cursor.value;
-                    cursor.continue();
-                } else {
-                    resolve(cache);
-                }
-            };
-            cursorReq.onerror = () => reject(cursorReq.error);
-        });
+        const cache = {};
+        const { data: arquivos, error } = await supabaseClient.storage.from(FOTOS_BUCKET).list();
+        if (error) {
+            console.error("Erro ao listar fotos do Supabase Storage", error);
+            return cache;
+        }
+        for (const arquivo of arquivos) {
+            const alunoId = arquivo.name.replace(/\.jpg$/, '');
+            const { data, error: errDownload } = await supabaseClient.storage.from(FOTOS_BUCKET).download(arquivo.name);
+            if (errDownload) { console.error("Erro ao baixar foto", arquivo.name, errDownload); continue; }
+            cache[alunoId] = await blobParaDataUrl(data);
+        }
+        return cache;
     }
 
     function obterFotoAluno(alunoId) {
         return fotosCache[alunoId] || PLACEHOLDER_FOTO;
     }
 
-    // --- CONFIGURAÇÃO: GUARDA O HANDLE DO ARQUIVO LOCAL VINCULADO ---
-    // O "handle" (referência ao arquivo no disco, da File System Access API) é
-    // guardado no IndexedDB para que o vínculo sobreviva a um F5 / fechar e abrir
-    // o navegador de novo, sem precisar escolher o arquivo toda vez.
-    const CONFIG_DB_NOME = "escola_offline_config";
-    const CONFIG_STORE = "config";
-    const CHAVE_HANDLE_ARQUIVO = "arquivoDadosHandle";
-    let configDBConn = null;
-
-    function abrirConfigDB() {
-        return new Promise((resolve, reject) => {
-            if (configDBConn) { resolve(configDBConn); return; }
-            const req = indexedDB.open(CONFIG_DB_NOME, 1);
-            req.onupgradeneeded = () => {
-                const dbConn = req.result;
-                if (!dbConn.objectStoreNames.contains(CONFIG_STORE)) {
-                    dbConn.createObjectStore(CONFIG_STORE);
-                }
-            };
-            req.onsuccess = () => { configDBConn = req.result; resolve(configDBConn); };
-            req.onerror = () => reject(req.error);
-        });
-    }
-
-    async function salvarConfig(chave, valor) {
-        const dbConn = await abrirConfigDB();
-        return new Promise((resolve, reject) => {
-            const tx = dbConn.transaction(CONFIG_STORE, "readwrite");
-            tx.objectStore(CONFIG_STORE).put(valor, chave);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
-    }
-
-    async function obterConfig(chave) {
-        const dbConn = await abrirConfigDB();
-        return new Promise((resolve, reject) => {
-            const tx = dbConn.transaction(CONFIG_STORE, "readonly");
-            const req = tx.objectStore(CONFIG_STORE).get(chave);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-        });
-    }
-
-    async function removerConfig(chave) {
-        const dbConn = await abrirConfigDB();
-        return new Promise((resolve, reject) => {
-            const tx = dbConn.transaction(CONFIG_STORE, "readwrite");
-            tx.objectStore(CONFIG_STORE).delete(chave);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
-    }
-
-    // --- ARQUIVO DE DADOS LOCAL (FILE SYSTEM ACCESS API) ---
-    // Permite gravar os dados diretamente num arquivo .json escolhido pelo
-    // usuário no computador, em vez de depender só do localStorage do
-    // navegador. Disponível apenas em navegadores baseados em Chromium
-    // (Chrome, Edge, Opera). Nos demais, o sistema continua funcionando
-    // normalmente só com localStorage + backup manual.
-    let arquivoDadosHandle = null;
-    // 'indisponivel' | 'nao_vinculado' | 'permissao_pendente' | 'vinculado'
-    let statusArquivoLocal = 'indisponivel';
-    let avisoArquivoPerdidoExibido = false;
-
-    function suportaFileSystemAccess() {
-        return typeof window.showSaveFilePicker === 'function' && typeof window.showOpenFilePicker === 'function';
-    }
-
-    // Limpa o vínculo quando o arquivo original não existe mais (apagado,
-    // movido ou renomeado). Sem isso, o sistema ficava "preso" achando que
-    // ainda tinha um arquivo vinculado e nunca oferecia a opção de criar um
-    // novo.
-    async function liberarArquivoPerdido() {
-        arquivoDadosHandle = null;
-        statusArquivoLocal = 'nao_vinculado';
-        await removerConfig(CHAVE_HANDLE_ARQUIVO);
-        atualizarIndicadorArquivoLocal();
-    }
-
-    async function verificarPermissaoHandle(handle, solicitar) {
-        const opcoes = { mode: 'readwrite' };
-        let permissao = await handle.queryPermission(opcoes);
-        if (permissao === 'prompt' && solicitar) {
-            try {
-                permissao = await handle.requestPermission(opcoes);
-            } catch (e) {
-                // Pode falhar se o "gesto do usuário" (clique) já tiver expirado
-                // por causa das operações assíncronas (IndexedDB etc.) entre o
-                // clique de login e esta chamada. Nesse caso, cai pro fluxo
-                // manual de "Reconectar".
-                console.warn("Não foi possível pedir permissão automaticamente (sem gesto do usuário disponível ainda).", e);
-                permissao = 'prompt';
-            }
-        }
-        return permissao === 'granted';
-    }
-
-    // Roda na inicialização: tenta retomar o arquivo vinculado numa sessão
-    // anterior. Se a permissão ainda estiver concedida (o navegador lembra
-    // isso por origem), carrega os dados direto do arquivo, sem precisar
-    // pedir nada ao usuário.
-    async function restaurarArquivoVinculado() {
-        if (!suportaFileSystemAccess()) {
-            statusArquivoLocal = 'indisponivel';
-            atualizarIndicadorArquivoLocal();
-            return;
-        }
-        try {
-            const handle = await obterConfig(CHAVE_HANDLE_ARQUIVO);
-            if (!handle) {
-                statusArquivoLocal = 'nao_vinculado';
-                atualizarIndicadorArquivoLocal();
-                return;
-            }
-            arquivoDadosHandle = handle;
-            // Tenta pedir a permissão automaticamente aqui, aproveitando o
-            // clique de login como gesto do usuário. Pode não funcionar (o
-            // navegador às vezes já "gastou" esse gesto até aqui) — nesse
-            // caso, sobra o botão "Reconectar" como caminho manual.
-            const permitido = await verificarPermissaoHandle(handle, true);
-            if (permitido) {
-                statusArquivoLocal = 'vinculado';
-                await carregarDeArquivoVinculado();
-            } else {
-                statusArquivoLocal = 'permissao_pendente';
-            }
-        } catch (e) {
-            console.error("Não foi possível restaurar o arquivo de dados vinculado", e);
-            statusArquivoLocal = 'nao_vinculado';
-        }
-        atualizarIndicadorArquivoLocal();
-    }
-
-    // Lê o conteúdo do arquivo vinculado e substitui os dados em memória
-    // (db + fotos) pelo que está gravado nele. Chamado ao restaurar o vínculo
-    // e ao reconectar/abrir um arquivo existente.
-    async function carregarDeArquivoVinculado() {
-        try {
-            const file = await arquivoDadosHandle.getFile();
-            const texto = await file.text();
-            if (!texto.trim()) return; // arquivo novo/vazio: mantém o db atual e grava nele em seguida
-            const pacote = JSON.parse(texto);
-            const { fotos, ...resto } = pacote;
-            db = Array.isArray(resto.alunos) ? resto : { alunos: [] };
-            if (!db.config) db.config = {};
-            if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
-            if (fotos) {
-                for (const [alunoId, dataUrl] of Object.entries(fotos)) {
-                    await salvarFotoDB(alunoId, dataUrl);
-                }
-                fotosCache = await carregarTodasFotosDB();
-            }
-        } catch (e) {
-            console.error("Erro ao ler o arquivo de dados vinculado", e);
-            if (e.name === 'NotFoundError') {
-                await liberarArquivoPerdido();
-                if (!avisoArquivoPerdidoExibido) {
-                    avisoArquivoPerdidoExibido = true;
-                    alert("O arquivo de dados local não foi encontrado (parece ter sido apagado ou movido). Os dados continuam salvos no navegador — você pode criar um novo arquivo ou vincular outro existente quando quiser.");
-                }
-            } else {
-                alert("Não foi possível ler o arquivo de dados local vinculado. Os dados salvos no navegador (localStorage) serão usados como reserva até você reconectar o arquivo.");
-                statusArquivoLocal = 'permissao_pendente';
-            }
-        }
-    }
-
-    // Pede permissão de novo (precisa ser chamada a partir de um clique do
-    // usuário, exigência do navegador) quando o vínculo existe mas a
-    // permissão expirou ou não foi concedida ainda nesta sessão.
-    async function reconectarArquivoVinculado() {
-        if (!arquivoDadosHandle) return;
-        const permitido = await verificarPermissaoHandle(arquivoDadosHandle, true);
-        if (permitido) {
-            statusArquivoLocal = 'vinculado';
-            await carregarDeArquivoVinculado();
-            atualizarIndicadorArquivoLocal();
-            atualizarDashboard();
-            populasSelectsAlunos();
-            listarAlunos();
-            salvarDB();
-            alert("Arquivo local reconectado com sucesso.");
-        } else {
-            alert("Permissão negada. Os dados continuarão sendo salvos apenas no navegador (localStorage) até você reconectar.");
-        }
-    }
-
-    // Cria um arquivo novo no computador e passa a gravar tudo nele a partir
-    // de agora (grava o estado atual imediatamente).
-    async function vincularNovoArquivo() {
-        if (!suportaFileSystemAccess()) {
-            alert("Seu navegador não suporta salvar direto em um arquivo local. Use Chrome ou Edge para essa função, ou continue usando o botão 'Baixar Backup'.");
-            return;
-        }
-        try {
-            const handle = await window.showSaveFilePicker({
-                suggestedName: 'dados_escola.json',
-                types: [{ description: 'Arquivo de dados da escola', accept: { 'application/json': ['.json'] } }]
+    // --- FOTOS SOB DEMANDA: só baixa a foto quando o elemento <img> entra na
+    // tela, usando IntersectionObserver (a API do navegador para "isso ficou
+    // visível"). Evita baixar as fotos de todos os alunos no login/relatórios.
+    let observadorFotos = null;
+    function obterObservadorFotos() {
+        if (observadorFotos) return observadorFotos;
+        observadorFotos = new IntersectionObserver((entradas) => {
+            entradas.forEach(entrada => {
+                if (!entrada.isIntersecting) return;
+                const img = entrada.target;
+                const alunoId = img.dataset.fotoAluno;
+                observadorFotos.unobserve(img);
+                carregarFotoSobDemanda(alunoId).then(dataUrl => { img.src = dataUrl; });
             });
-            arquivoDadosHandle = handle;
-            await salvarConfig(CHAVE_HANDLE_ARQUIVO, handle);
-            statusArquivoLocal = 'vinculado';
-            avisoArquivoPerdidoExibido = false;
-            atualizarIndicadorArquivoLocal();
-            salvarDB();
-            alert("Arquivo criado e vinculado! A partir de agora, tudo é salvo automaticamente nele, além do navegador.");
-        } catch (e) {
-            if (e.name !== 'AbortError') console.error(e);
-        }
+        }, { root: null, rootMargin: '150px', threshold: 0.01 });
+        return observadorFotos;
     }
 
-    // Vincula um arquivo .json já existente (por exemplo, um backup baixado
-    // antes) e carrega os dados dele.
-    async function abrirArquivoExistente() {
-        if (!suportaFileSystemAccess()) {
-            alert("Seu navegador não suporta essa função. Use Chrome ou Edge.");
-            return;
-        }
+    // Baixa (e guarda em cache) a foto de um único aluno, se ainda não tiver.
+    async function carregarFotoSobDemanda(alunoId) {
+        if (fotosCache[alunoId]) return fotosCache[alunoId];
         try {
-            const [handle] = await window.showOpenFilePicker({
-                types: [{ description: 'Arquivo de dados da escola', accept: { 'application/json': ['.json'] } }]
-            });
-            const permitido = await verificarPermissaoHandle(handle, true);
-            if (!permitido) { alert("Permissão negada para acessar o arquivo."); return; }
-            arquivoDadosHandle = handle;
-            await salvarConfig(CHAVE_HANDLE_ARQUIVO, handle);
-            statusArquivoLocal = 'vinculado';
-            avisoArquivoPerdidoExibido = false;
-            await carregarDeArquivoVinculado();
-            atualizarIndicadorArquivoLocal();
-            atualizarDashboard();
-            populasSelectsAlunos();
-            listarAlunos();
-            alert("Arquivo carregado e vinculado com sucesso! Os dados dele substituíram os que estavam na tela.");
+            const { data, error } = await supabaseClient.storage.from(FOTOS_BUCKET).download(`${alunoId}.jpg`);
+            if (error) { fotosCache[alunoId] = PLACEHOLDER_FOTO; return PLACEHOLDER_FOTO; }
+            const dataUrl = await blobParaDataUrl(data);
+            fotosCache[alunoId] = dataUrl;
+            return dataUrl;
         } catch (e) {
-            if (e.name !== 'AbortError') console.error(e);
+            console.error("Erro ao baixar foto sob demanda", alunoId, e);
+            return PLACEHOLDER_FOTO;
         }
     }
 
-    async function desvincularArquivo() {
-        if (!confirm("Desvincular o arquivo local? Os dados continuam salvos no navegador, mas deixam de ser gravados automaticamente no arquivo.")) return;
-        arquivoDadosHandle = null;
-        statusArquivoLocal = 'nao_vinculado';
-        await removerConfig(CHAVE_HANDLE_ARQUIVO);
-        atualizarIndicadorArquivoLocal();
-    }
-
-    // Grava o estado atual (db + fotos) no arquivo vinculado. É "fire and
-    // forget": chamada a partir de salvarDB() sem travar a interface. Erros
-    // não derrubam o sistema — o localStorage continua sendo a reserva.
-    async function escreverArquivoVinculado() {
-        if (!arquivoDadosHandle || statusArquivoLocal !== 'vinculado') return;
-        try {
-            const pacoteBackup = { ...db, fotos: fotosCache };
-            const writable = await arquivoDadosHandle.createWritable();
-            await writable.write(JSON.stringify(pacoteBackup, null, 2));
-            await writable.close();
-        } catch (e) {
-            console.error("Erro ao gravar no arquivo local vinculado", e);
-            if (e.name === 'NotFoundError') {
-                await liberarArquivoPerdido();
-                if (!avisoArquivoPerdidoExibido) {
-                    avisoArquivoPerdidoExibido = true;
-                    alert("O arquivo de dados local não foi encontrado (parece ter sido apagado ou movido). Os dados continuam salvos no navegador — você pode criar um novo arquivo ou vincular outro existente quando quiser.");
-                }
-            } else if (e.name === 'NotAllowedError') {
-                statusArquivoLocal = 'permissao_pendente';
-                atualizarIndicadorArquivoLocal();
+    // Chame depois de renderizar uma lista de <img class="lazy-foto-aluno"
+    // data-foto-aluno="ID">: registra cada uma no observador (ou já preenche
+    // direto, se a foto já estiver em cache).
+    function ativarFotosLazy(containerEl) {
+        containerEl.querySelectorAll('.lazy-foto-aluno').forEach(img => {
+            const id = img.dataset.fotoAluno;
+            if (fotosCache[id]) {
+                img.src = fotosCache[id];
+            } else {
+                obterObservadorFotos().observe(img);
             }
-        }
-    }
-
-    function atualizarIndicadorArquivoLocal() {
-        const indicador = document.getElementById('indicador-arquivo-local');
-        const acoes = document.getElementById('acoes-arquivo-local');
-        if (!indicador || !acoes) return;
-
-        const mapa = {
-            indisponivel: { texto: 'Seu navegador não suporta arquivo local (use Chrome/Edge)', classe: 'sidebar-status-muted', icone: 'fa-ban' },
-            nao_vinculado: { texto: 'Nenhum arquivo local vinculado', classe: 'sidebar-status-warning', icone: 'fa-unlink' },
-            permissao_pendente: { texto: 'Arquivo vinculado, mas sem permissão', classe: 'sidebar-status-warning', icone: 'fa-plug-circle-exclamation' },
-            vinculado: { texto: 'Salvando em arquivo local', classe: 'sidebar-status-success', icone: 'fa-link' }
-        };
-        const info = mapa[statusArquivoLocal] || mapa.nao_vinculado;
-        indicador.innerHTML = `<i class="fas ${info.icone}"></i>${info.texto}`;
-        indicador.className = `sidebar-status-line ${info.classe}`;
-
-        let botoesHTML = '';
-        if (statusArquivoLocal === 'indisponivel') {
-            botoesHTML = '';
-        } else if (statusArquivoLocal === 'nao_vinculado') {
-            botoesHTML = `
-                <a class="sidebar-util-link" href="#" onclick="vincularNovoArquivo(); return false;"><i class="fas fa-file-circle-plus"></i>Criar arquivo local</a>
-                <a class="sidebar-util-link" href="#" onclick="abrirArquivoExistente(); return false;"><i class="fas fa-folder-open"></i>Usar arquivo existente</a>
-            `;
-        } else if (statusArquivoLocal === 'permissao_pendente') {
-            botoesHTML = `<a class="sidebar-util-link" href="#" onclick="reconectarArquivoVinculado(); return false;"><i class="fas fa-plug"></i>Reconectar arquivo</a>`;
-        } else if (statusArquivoLocal === 'vinculado') {
-            botoesHTML = `<a class="sidebar-util-link" href="#" onclick="desvincularArquivo(); return false;"><i class="fas fa-unlink"></i>Desvincular</a>`;
-        }
-        acoes.innerHTML = botoesHTML;
+        });
     }
 
     // Comprime/redimensiona a imagem antes de guardar (evita fotos de vários MB).
@@ -2191,8 +2081,8 @@
     }
 
     // Migra alunos antigos que ainda tenham "foto" embutida dentro de db.alunos
-    // (formato usado antes desta versão) para o IndexedDB, e limpa o campo do
-    // objeto que vai para o localStorage.
+    // (formato usado antes desta versão) para o Supabase Storage, e limpa o
+    // campo do objeto que vai para o banco.
     async function migrarFotosLegadasSeNecessario() {
         const pendentes = db.alunos.filter(a => a.foto && a.foto !== PLACEHOLDER_FOTO);
         if (pendentes.length === 0) return;
@@ -2206,58 +2096,74 @@
 
     async function inicializarFotos() {
         await migrarFotosLegadasSeNecessario();
-        fotosCache = await carregarTodasFotosDB();
+        // fotosCache começa vazio (fora das legadas acima) e é preenchido aos
+        // poucos, só quando cada foto realmente aparece na tela — ver
+        // carregarFotoSobDemanda/ativarFotosLazy.
     }
 
-    // --- AUTENTICAÇÃO (SENHA LOCAL, SEM SERVIDOR) ---
-    // A senha do usuário é guardada como hash SHA-256 no localStorage (nunca em
-    // texto puro). A "senha mestra" permite redefinir a senha caso o usuário a
-    // esqueça. Importante: como é tudo client-side, isso protege contra acesso
-    // casual (alguém abrindo o arquivo no mesmo computador), não contra alguém
-    // com acesso ao código-fonte do arquivo.
-    const AUTH_SENHA_KEY = "escola_senha_hash";
-    const AUTH_SESSAO_KEY = "escola_autenticado";
-    const SENHA_MESTRA = "xSundowner";
+    // --- AUTENTICAÇÃO (SUPABASE AUTH) ---
     let appJaInicializado = false;
-
-    async function hashTexto(texto) {
-        const dados = new TextEncoder().encode(texto);
-        const buffer = await crypto.subtle.digest("SHA-256", dados);
-        return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, "0")).join("");
-    }
+    let usuarioAtual = null; // sessão do Supabase Auth
 
     function ocultarErrosAuth() {
-        ["auth-login-erro", "auth-criar-erro", "auth-recup-erro"].forEach(id => {
+        ["auth-login-erro", "auth-recup-erro", "auth-nova-senha-recuperacao-erro"].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
+        });
+        const sucessoEl = document.getElementById('auth-recup-sucesso');
+        if (sucessoEl) sucessoEl.style.display = 'none';
+    }
+
+    function esconderTodasTelasAuth() {
+        ['auth-form-login', 'auth-form-recuperar', 'auth-form-nova-senha-recuperacao'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
         });
     }
 
     function mostrarTelaLogin() {
         ocultarErrosAuth();
+        esconderTodasTelasAuth();
         document.getElementById('auth-form-login').style.display = 'block';
-        document.getElementById('auth-form-criar').style.display = 'none';
-        document.getElementById('auth-form-recuperar').style.display = 'none';
         const inputSenha = document.getElementById('auth-senha-login');
         if (inputSenha) { inputSenha.value = ''; setTimeout(() => inputSenha.focus(), 50); }
     }
 
     function mostrarTelaRecuperacao() {
         ocultarErrosAuth();
-        document.getElementById('auth-form-login').style.display = 'none';
-        document.getElementById('auth-form-criar').style.display = 'none';
+        esconderTodasTelasAuth();
         document.getElementById('auth-form-recuperar').style.display = 'block';
-        ['auth-senha-mestra', 'auth-recup-nova-senha', 'auth-recup-confirmar-senha'].forEach(id => document.getElementById(id).value = '');
-        setTimeout(() => document.getElementById('auth-senha-mestra').focus(), 50);
+        document.getElementById('auth-recup-email').value = '';
+        setTimeout(() => document.getElementById('auth-recup-email').focus(), 50);
     }
 
-    // Decide qual tela mostrar (login / criar senha / app) ao carregar a página.
+    function mostrarTelaNovaSenhaRecuperacao() {
+        ocultarErrosAuth();
+        esconderTodasTelasAuth();
+        document.getElementById('auth-form-nova-senha-recuperacao').style.display = 'block';
+        ['auth-nova-senha-recuperacao', 'auth-confirmar-nova-senha-recuperacao'].forEach(id => document.getElementById(id).value = '');
+    }
+
+    // Decide qual tela mostrar (login / criar conta / definir nova senha / app)
+    // ao carregar a página, com base na sessão do Supabase Auth.
     async function verificarAutenticacao() {
         const telaAuth = document.getElementById('tela-auth');
         const appContainer = document.getElementById('app-container');
-        const hashSalvo = localStorage.getItem(AUTH_SENHA_KEY);
 
-        if (hashSalvo && sessionStorage.getItem(AUTH_SESSAO_KEY) === '1') {
+        // Se o usuário chegou aqui pelo link de "esqueci minha senha" (e-mail),
+        // o Supabase dispara o evento PASSWORD_RECOVERY — mostramos a tela de
+        // definir nova senha em vez de entrar direto no sistema.
+        supabaseClient.auth.onAuthStateChange((evento) => {
+            if (evento === 'PASSWORD_RECOVERY') {
+                appContainer.style.display = 'none';
+                telaAuth.style.display = 'flex';
+                mostrarTelaNovaSenhaRecuperacao();
+            }
+        });
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (session && session.user) {
+            usuarioAtual = session.user;
             telaAuth.style.display = 'none';
             appContainer.style.display = '';
             await entrarNoSistema();
@@ -2266,75 +2172,61 @@
 
         appContainer.style.display = 'none';
         telaAuth.style.display = 'flex';
-
-        if (!hashSalvo) {
-            ocultarErrosAuth();
-            document.getElementById('auth-form-login').style.display = 'none';
-            document.getElementById('auth-form-criar').style.display = 'block';
-            document.getElementById('auth-form-recuperar').style.display = 'none';
-            ['auth-nova-senha', 'auth-confirmar-senha'].forEach(id => document.getElementById(id).value = '');
-        } else {
-            mostrarTelaLogin();
-        }
+        mostrarTelaLogin();
     }
 
-    async function criarSenhaInicial() {
-        const nova = document.getElementById('auth-nova-senha').value;
-        const confirmar = document.getElementById('auth-confirmar-senha').value;
-        const erroEl = document.getElementById('auth-criar-erro');
+    async function fazerLogin() {
+        const email = document.getElementById('auth-email-login').value.trim();
+        const senha = document.getElementById('auth-senha-login').value;
+        const erroEl = document.getElementById('auth-login-erro');
         erroEl.style.display = 'none';
 
-        if (!nova || nova.length < 4) {
-            erroEl.textContent = 'A senha deve ter pelo menos 4 caracteres.';
-            erroEl.style.display = 'block';
-            return;
-        }
-        if (nova !== confirmar) {
-            erroEl.textContent = 'As senhas não coincidem.';
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+        if (error) {
+            erroEl.textContent = 'E-mail ou senha incorretos.';
             erroEl.style.display = 'block';
             return;
         }
 
-        localStorage.setItem(AUTH_SENHA_KEY, await hashTexto(nova));
-        sessionStorage.setItem(AUTH_SESSAO_KEY, '1');
+        usuarioAtual = data.user;
         document.getElementById('tela-auth').style.display = 'none';
         document.getElementById('app-container').style.display = '';
         await entrarNoSistema();
     }
 
-    async function fazerLogin() {
-        const senha = document.getElementById('auth-senha-login').value;
-        const erroEl = document.getElementById('auth-login-erro');
-        erroEl.style.display = 'none';
-
-        const hashSalvo = localStorage.getItem(AUTH_SENHA_KEY);
-        const hashDigitado = await hashTexto(senha);
-
-        if (hashSalvo && hashDigitado === hashSalvo) {
-            sessionStorage.setItem(AUTH_SESSAO_KEY, '1');
-            document.getElementById('tela-auth').style.display = 'none';
-            document.getElementById('app-container').style.display = '';
-            await entrarNoSistema();
-        } else {
-            erroEl.textContent = 'Senha incorreta.';
-            erroEl.style.display = 'block';
-        }
-    }
-
-    async function redefinirSenhaComMestra() {
-        const mestra = document.getElementById('auth-senha-mestra').value;
-        const nova = document.getElementById('auth-recup-nova-senha').value;
-        const confirmar = document.getElementById('auth-recup-confirmar-senha').value;
+    async function enviarRecuperacaoSenha() {
+        const email = document.getElementById('auth-recup-email').value.trim();
         const erroEl = document.getElementById('auth-recup-erro');
+        const sucessoEl = document.getElementById('auth-recup-sucesso');
         erroEl.style.display = 'none';
+        sucessoEl.style.display = 'none';
 
-        if (mestra !== SENHA_MESTRA) {
-            erroEl.textContent = 'Senha mestra incorreta.';
+        if (!email) {
+            erroEl.textContent = 'Informe um e-mail.';
             erroEl.style.display = 'block';
             return;
         }
-        if (!nova || nova.length < 4) {
-            erroEl.textContent = 'A nova senha deve ter pelo menos 4 caracteres.';
+
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href.split('#')[0]
+        });
+        if (error) {
+            erroEl.textContent = 'Não foi possível enviar o e-mail: ' + error.message;
+            erroEl.style.display = 'block';
+            return;
+        }
+        sucessoEl.textContent = 'Se este e-mail estiver cadastrado, um link de redefinição foi enviado.';
+        sucessoEl.style.display = 'block';
+    }
+
+    async function salvarNovaSenhaRecuperacao() {
+        const nova = document.getElementById('auth-nova-senha-recuperacao').value;
+        const confirmar = document.getElementById('auth-confirmar-nova-senha-recuperacao').value;
+        const erroEl = document.getElementById('auth-nova-senha-recuperacao-erro');
+        erroEl.style.display = 'none';
+
+        if (!nova || nova.length < 6) {
+            erroEl.textContent = 'A nova senha deve ter pelo menos 6 caracteres.';
             erroEl.style.display = 'block';
             return;
         }
@@ -2344,13 +2236,20 @@
             return;
         }
 
-        localStorage.setItem(AUTH_SENHA_KEY, await hashTexto(nova));
+        const { error } = await supabaseClient.auth.updateUser({ password: nova });
+        if (error) {
+            erroEl.textContent = 'Erro ao redefinir senha: ' + error.message;
+            erroEl.style.display = 'block';
+            return;
+        }
         alert('Senha redefinida com sucesso! Faça login com a nova senha.');
-        mostrarTelaLogin();
+        await supabaseClient.auth.signOut();
+        location.reload();
     }
 
-    function sair() {
-        sessionStorage.removeItem(AUTH_SESSAO_KEY);
+    async function sair() {
+        await liberarBloqueioAtual();
+        await supabaseClient.auth.signOut();
         location.reload();
     }
 
@@ -2359,18 +2258,31 @@
         verificarAutenticacao();
     });
 
+    // Melhor esforço: tenta liberar o bloqueio de edição ao fechar a aba/
+    // recarregar. Não é garantido (o navegador pode não dar tempo), mas o
+    // "sinal de vida" (heartbeat) já cobre esse caso — o lock expira sozinho
+    // depois de BLOQUEIO_STALE_MS sem renovação.
+    window.addEventListener("beforeunload", () => {
+        if (bloqueioAtual && usuarioAtual) {
+            supabaseClient.from('bloqueios_edicao').delete().eq('aluno_id', bloqueioAtual.alunoId).eq('usuario_id', usuarioAtual.id);
+        }
+    });
+
     // Só roda depois do login bem-sucedido (ou criação de senha), e só uma vez
     // por sessão de página — trocar de senha/logar de novo não reinicializa tudo.
     async function inicializarApp() {
         if (appJaInicializado) return;
         appJaInicializado = true;
 
-        carregarDB();
+        await carregarPerfilUsuario();
+        aplicarRestricoesPapel();
+        await carregarDB();
         await inicializarFotos();
-        // Se houver um arquivo local vinculado de uma sessão anterior e a
-        // permissão ainda estiver válida, os dados dele substituem os do
-        // localStorage (carregarDeArquivoVinculado atualiza "db" e as fotos).
-        await restaurarArquivoVinculado();
+        const indicadorConta = document.getElementById('indicador-conta');
+        if (indicadorConta && usuarioAtual) {
+            const rotuloPapel = papelUsuario === 'admin' ? 'Admin' : 'Professor';
+            indicadorConta.innerHTML = `<i class="fas fa-cloud"></i>${usuarioAtual.email} <span class="badge bg-light text-dark ms-1">${rotuloPapel}</span>`;
+        }
         modalAlunoBs = new bootstrap.Modal(document.getElementById('modalAluno'));
         document.getElementById('imgPreview').src = PLACEHOLDER_FOTO;
         document.getElementById('dataChamada').valueAsDate = new Date();
@@ -2408,16 +2320,152 @@
         await inicializarApp();
     }
 
-    // --- PERSISTÊNCIA LOCAL (LOCALSTORAGE) ---
-    function carregarDB() {
-        const data = localStorage.getItem("escola_offline_db");
-        if (data) {
-            try {
-                db = JSON.parse(data);
-            } catch (e) {
-                console.error("Erro ao ler banco local", e);
-            }
+    // --- PAPÉIS DE USUÁRIO (ADMIN / PROFESSOR) ---
+    async function carregarPerfilUsuario() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('perfis')
+                .select('role')
+                .eq('id', usuarioAtual.id)
+                .maybeSingle();
+            if (error) throw error;
+            papelUsuario = (data && data.role) || 'professor';
+        } catch (e) {
+            console.error("Não foi possível carregar o papel do usuário, tratando como professor por segurança.", e);
+            papelUsuario = 'professor';
         }
+    }
+
+    function aplicarRestricoesPapel() {
+        document.body.classList.toggle('modo-professor', papelUsuario !== 'admin');
+    }
+
+    // Nota: esta função só é usada como reforço na interface. Quem realmente
+    // decide o que cada papel pode fazer é a política de RLS no Supabase.
+    function usuarioEhAdmin() {
+        return papelUsuario === 'admin';
+    }
+
+    async function listarUsuarios() {
+        const tbody = document.getElementById('tabelaUsuarios');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Carregando...</td></tr>';
+
+        const { data, error } = await supabaseClient
+            .from('perfis')
+            .select('id, email, role')
+            .order('email');
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-danger">Erro ao carregar usuários: ${error.message}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = (data || []).map(u => `
+            <tr>
+                <td>${u.email || '(sem e-mail)'}</td>
+                <td>
+                    <span class="badge ${u.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${u.role === 'admin' ? 'Administrador' : 'Professor'}</span>
+                </td>
+                <td class="text-center">
+                    ${u.id === usuarioAtual.id
+                        ? '<span class="text-muted small">Você</span>'
+                        : `<button class="btn btn-sm btn-outline-secondary" onclick="alterarPapelUsuario('${u.id}', '${u.role === 'admin' ? 'professor' : 'admin'}')">
+                             Tornar ${u.role === 'admin' ? 'Professor' : 'Admin'}
+                           </button>`
+                    }
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="3" class="text-center text-muted">Nenhum usuário encontrado.</td></tr>';
+    }
+
+    async function alterarPapelUsuario(id, novoPapel) {
+        const { error } = await supabaseClient.from('perfis').update({ role: novoPapel }).eq('id', id);
+        if (error) {
+            alert('Erro ao alterar papel do usuário: ' + error.message);
+            return;
+        }
+        listarUsuarios();
+    }
+
+    async function criarUsuario(event) {
+        event.preventDefault();
+        if (!usuarioEhAdmin()) return;
+
+        const email = document.getElementById('novoUsuarioEmail').value.trim();
+        const senha = document.getElementById('novoUsuarioSenha').value;
+        const papel = document.getElementById('novoUsuarioPapel').value;
+        const erroEl = document.getElementById('criarUsuarioErro');
+        erroEl.style.display = 'none';
+
+        // Usa o cliente auxiliar (sem persistir sessão) para não derrubar a
+        // sessão do admin que está logado no cliente principal.
+        const { data, error } = await supabaseAdminAux.auth.signUp({ email, password: senha });
+        if (error) {
+            erroEl.textContent = error.message.includes('already registered') ? 'Este e-mail já tem uma conta cadastrada.' : ('Erro ao criar usuário: ' + error.message);
+            erroEl.style.display = 'block';
+            return;
+        }
+        await supabaseAdminAux.auth.signOut();
+
+        // O gatilho no banco já cria a linha em "perfis" com papel padrão
+        // "professor"; se o admin escolheu "admin", promove aqui.
+        if (data.user && papel === 'admin') {
+            await supabaseClient.from('perfis').update({ role: 'admin' }).eq('id', data.user.id);
+        }
+
+        document.getElementById('novoUsuarioEmail').value = '';
+        document.getElementById('novoUsuarioSenha').value = '';
+        document.getElementById('novoUsuarioPapel').value = 'professor';
+        alert('Usuário criado! Repasse o e-mail e a senha provisória para a pessoa.');
+        listarUsuarios();
+    }
+
+    // --- PERSISTÊNCIA NA NUVEM (SUPABASE) ---
+    // Os dados de todos os alunos/notas/frequência ficam numa única linha
+    // compartilhada (id = SISTEMA_DADOS_ID) na tabela "sistema_dados", numa
+    // coluna jsonb. Qualquer usuário autenticado da escola lê e escreve nela
+    // (controlado pelas políticas de RLS no banco). O sistema depende de
+    // internet — não há mais cópia local/offline dos dados.
+    let indicadorSyncEl = null;
+    function atualizarIndicadorSync(status) {
+        if (!indicadorSyncEl) indicadorSyncEl = document.getElementById('indicador-conta');
+        if (!indicadorSyncEl || !usuarioAtual) return;
+        const mapa = {
+            ok: `<i class="fas fa-cloud"></i>${usuarioAtual.email}`,
+            salvando: `<i class="fas fa-cloud-arrow-up"></i>Salvando...`,
+            erro: `<i class="fas fa-triangle-exclamation"></i>Sem conexão — não foi possível salvar`
+        };
+        indicadorSyncEl.innerHTML = mapa[status] || mapa.ok;
+        indicadorSyncEl.className = 'sidebar-status-line ' + (status === 'erro' ? 'sidebar-status-warning' : 'sidebar-status-success');
+    }
+
+    async function carregarDB() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('sistema_dados')
+                .select('dados')
+                .eq('id', SISTEMA_DADOS_ID)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (data && data.dados) {
+                db = data.dados;
+            } else {
+                // Primeira vez: ainda não existe a linha compartilhada — cria vazia
+                // para os próximos usuários lerem.
+                db = { alunos: [] };
+                await supabaseClient.from('sistema_dados').upsert({ id: SISTEMA_DADOS_ID, dados: db });
+            }
+            atualizarIndicadorSync('ok');
+        } catch (e) {
+            console.error("Não foi possível carregar os dados do Supabase.", e);
+            atualizarIndicadorSync('erro');
+            alert("Não foi possível conectar ao servidor para carregar os dados. Verifique sua internet e recarregue a página.");
+        }
+
+        if (!db || !Array.isArray(db.alunos)) db = { alunos: [] };
         if (!db.config) db.config = {};
         if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
     }
@@ -2434,21 +2482,42 @@
         alert('Nome da escola atualizado com sucesso!');
     }
 
-    function salvarDB() {
-        localStorage.setItem("escola_offline_db", JSON.stringify(db));
-        // Grava também no arquivo local vinculado (se houver), em segundo
-        // plano, sem travar a interface. O localStorage continua sendo
-        // atualizado sempre, como reserva.
-        escreverArquivoVinculado();
+    async function salvarDB() {
         atualizarDashboard();
         populasSelectsAlunos();
         const resumoTab = document.getElementById('tab-resumo-presenca');
         if (resumoTab && resumoTab.classList.contains('show')) renderizarCalendarioPresenca();
+
+        atualizarIndicadorSync('salvando');
+        try {
+            const { error } = await supabaseClient
+                .from('sistema_dados')
+                .upsert({ id: SISTEMA_DADOS_ID, dados: db, atualizado_em: new Date().toISOString() });
+            if (error) throw error;
+            atualizarIndicadorSync('ok');
+        } catch (e) {
+            console.error("Erro ao salvar no Supabase.", e);
+            atualizarIndicadorSync('erro');
+            alert("Não foi possível salvar essa alteração — sem conexão com o servidor. Verifique sua internet e tente novamente.");
+        }
     }
 
     async function exportarBackup() {
-        // O backup inclui as fotos (lidas do IndexedDB) num campo separado "fotos",
-        // já que o arquivo baixado não tem o limite de tamanho do localStorage.
+        if (!usuarioEhAdmin()) { alert('Somente administradores podem baixar o backup.'); return; }
+        // Como as fotos agora são baixadas sob demanda (só quando aparecem na
+        // tela), o cache em memória pode não ter todas ainda — busca todas do
+        // Supabase Storage aqui, só nesse momento pontual de gerar o backup.
+        const botao = document.querySelector('a[onclick="exportarBackup()"]');
+        const htmlOriginal = botao ? botao.innerHTML : '';
+        if (botao) botao.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Baixando fotos...';
+
+        const todasAsFotos = await carregarTodasFotosDB();
+        fotosCache = { ...fotosCache, ...todasAsFotos };
+
+        if (botao) botao.innerHTML = htmlOriginal;
+
+        // O backup inclui as fotos num campo separado "fotos", já que o
+        // arquivo baixado não tem o limite de tamanho do banco de dados.
         const pacoteBackup = {
             ...db,
             fotos: fotosCache
@@ -2466,6 +2535,7 @@
     }
 
     function importarBackup(event) {
+        if (!usuarioEhAdmin()) { alert('Somente administradores podem restaurar um backup.'); event.target.value = ''; return; }
         const file = event.target.files[0];
         if (!file) return;
 
@@ -2506,10 +2576,26 @@
         reader.readAsText(file);
     }
 
+    // --- MENU MOBILE (gaveta) ---
+    // Só tem efeito visual dentro do @media (max-width:768px); no desktop
+    // essas classes não têm nenhum CSS associado, então não mudam nada lá.
+    function toggleSidebarMobile() {
+        document.querySelector('.sidebar').classList.toggle('sidebar-aberta');
+        document.querySelector('.sidebar-overlay-mobile').classList.toggle('aberta');
+    }
+    function fecharSidebarMobile() {
+        document.querySelector('.sidebar').classList.remove('sidebar-aberta');
+        document.querySelector('.sidebar-overlay-mobile').classList.remove('aberta');
+    }
+
     // --- NAVEGAÇÃO ENTRE SEÇÕES ---
     function showSection(sectionId, element = null) {
-        carregarDB();
-
+        fecharSidebarMobile();
+        // Saindo da seção de Notas (para qualquer outra): libera o bloqueio de
+        // edição que eu possa estar segurando.
+        if (sectionId !== 'notas' && bloqueioAtual) {
+            liberarBloqueioAtual();
+        }
         document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
         document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
 
@@ -2539,6 +2625,7 @@
             if (select && select.value) renderizarRelatorio();
         }
         if (sectionId === 'buscativa') renderizarBuscativa();
+        if (sectionId === 'usuarios') listarUsuarios();
     }
 
     function irParaNotasDoAluno(alunoId) {
@@ -2841,7 +2928,8 @@
     }
 
     // --- CRUD ALUNOS ---
-    function abrirModalAluno(id = null) {
+    async function abrirModalAluno(id = null) {
+        if (!usuarioEhAdmin()) { alert('Somente administradores podem criar ou editar o cadastro de um aluno.'); return; }
         document.getElementById('formAluno').reset();
         document.getElementById('alunoId').value = '';
         document.getElementById('alunoStatus').value = 'Ativo';
@@ -2863,12 +2951,14 @@
                 document.getElementById('alunoNascimento').value = aluno.nascimento;
                 document.getElementById('alunoSerie').value = aluno.serie;
                 document.getElementById('alunoNEE').value = aluno.nee;
-                const fotoAtual = obterFotoAluno(aluno.id);
+                document.getElementById('modalAlunoTitle').innerText = 'Editar Aluno';
+                modalAlunoBs.show();
+                const fotoAtual = await carregarFotoSobDemanda(aluno.id);
                 if (fotoAtual !== PLACEHOLDER_FOTO) {
                     fotoBase64Temp = fotoAtual;
                     document.getElementById('imgPreview').src = fotoAtual;
                 }
-                document.getElementById('modalAlunoTitle').innerText = 'Editar Aluno';
+                return;
             }
         }
         modalAlunoBs.show();
@@ -2896,6 +2986,7 @@
 
     async function salvarAluno(event) {
         event.preventDefault();
+        if (!usuarioEhAdmin()) { alert('Somente administradores podem criar ou editar o cadastro de um aluno.'); return; }
         const id = document.getElementById('alunoId').value || Date.now().toString();
         const existingIndex = db.alunos.findIndex(a => a.id === id);
 
@@ -2925,8 +3016,8 @@
         alunoData.nascimento = document.getElementById('alunoNascimento').value;
         alunoData.serie = document.getElementById('alunoSerie').value;
         alunoData.nee = document.getElementById('alunoNEE').value;
-        // A foto NÃO fica dentro de "alunoData" (que vai para o localStorage).
-        // Ela é guardada separadamente no IndexedDB e espelhada em fotosCache.
+        // A foto NÃO fica dentro de "alunoData" (que vai para o banco no Supabase).
+        // Ela é guardada separadamente no Supabase Storage e espelhada em fotosCache.
         delete alunoData.foto;
 
         MATERIAS.forEach(m => {
@@ -2955,6 +3046,7 @@
     }
 
     async function excluirAluno(id) {
+        if (!usuarioEhAdmin()) { alert('Somente administradores podem excluir um aluno.'); return; }
         if (confirm("Tem certeza que deseja excluir este aluno? Todos os registros serão perdidos.")) {
             db.alunos = db.alunos.filter(a => a.id !== id);
             await excluirFotoDB(id);
@@ -3010,7 +3102,7 @@
         renderizarPaginacaoAlunos(filtrados.length, totalPaginas);
 
         pagina.forEach(a => {
-            const fotoSrc = obterFotoAluno(a.id);
+            const fotoSrc = fotosCache[a.id] || PLACEHOLDER_FOTO;
             const statusAluno = a.status || 'Ativo';
             const dtMatricula = a.matricula ? a.matricula.split('-').reverse().join('/') : '-';
             const statusBadge = statusAluno === 'Ativo' 
@@ -3023,7 +3115,7 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td><img src="${fotoSrc}" width="40" height="40" style="object-fit:cover; border-radius:50%;"></td>
+                    <td><img class="lazy-foto-aluno" data-foto-aluno="${a.id}" src="${fotoSrc}" width="40" height="40" style="object-fit:cover; border-radius:50%;"></td>
                     <td><strong>${a.ra}</strong></td>
                     <td>${a.nome}</td>
                     <td>${a.serie}</td>
@@ -3032,14 +3124,15 @@
                     <td>${a.telefone}</td>
                     <td>${neeBadge}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary me-1" title="Editar Aluno" onclick="abrirModalAluno('${a.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-primary me-1 apenas-admin" title="Editar Aluno" onclick="abrirModalAluno('${a.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-sm btn-outline-warning me-1" title="Notas e Atividades" onclick="irParaNotasDoAluno('${a.id}')"><i class="fas fa-book-open"></i></button>
                         <button class="btn btn-sm btn-outline-info me-1" title="Relatório / PDF" onclick="irParaRelatorioDoAluno('${a.id}')"><i class="fas fa-file-invoice"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" title="Excluir Aluno" onclick="excluirAluno('${a.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger apenas-admin" title="Excluir Aluno" onclick="excluirAluno('${a.id}')"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `;
         });
+        ativarFotosLazy(tbody);
     }
 
     function renderizarPaginacaoAlunos(totalAlunos, totalPaginas) {
@@ -3306,10 +3399,134 @@
         return `<td class="celula-nota-data">${conteudoNotaData(m, key, notaVal, dataVal)}</td>`;
     }
 
-    function carregarNotasAluno() {
+    // Para todos os efeitos de "quem está com o lock", uma linha sem sinal de
+    // vida há mais de BLOQUEIO_STALE_MS é tratada como abandonada (aba
+    // fechada sem liberar) e pode ser assumida por outra pessoa.
+    function bloqueioEstaExpirado(atualizadoEm) {
+        return (Date.now() - new Date(atualizadoEm).getTime()) > BLOQUEIO_STALE_MS;
+    }
+
+    function pararTimersBloqueio() {
+        if (bloqueioHeartbeatId) { clearInterval(bloqueioHeartbeatId); bloqueioHeartbeatId = null; }
+        if (bloqueioPollId) { clearInterval(bloqueioPollId); bloqueioPollId = null; }
+    }
+
+    function mostrarAvisoBloqueio(mensagem) {
+        const aviso = document.getElementById('aviso-bloqueio-notas');
+        const texto = document.getElementById('aviso-bloqueio-notas-texto');
+        const painel = document.getElementById('painel-notas-container');
+        if (mensagem) {
+            // Proteção extra: nunca deixa a barra aparecer sem nenhum texto.
+            texto.textContent = mensagem.trim() ? mensagem : 'Este aluno está sendo editado por outra pessoa agora. Aguarde.';
+            aviso.style.display = 'flex';
+            painel.classList.add('notas-bloqueadas');
+        } else {
+            aviso.style.display = 'none';
+            painel.classList.remove('notas-bloqueadas');
+        }
+    }
+
+    // Libera (apaga) o lock que EU seguro no momento, se houver. Chamado ao
+    // trocar de aluno, sair da seção de Notas, ou deslogar.
+    async function liberarBloqueioAtual() {
+        pararTimersBloqueio();
+        if (!bloqueioAtual) return;
+        const alunoId = bloqueioAtual.alunoId;
+        bloqueioAtual = null;
+        try {
+            await supabaseClient.from('bloqueios_edicao').delete().eq('aluno_id', alunoId).eq('usuario_id', usuarioAtual.id);
+        } catch (e) {
+            console.warn('Não foi possível liberar o bloqueio de edição.', e);
+        }
+    }
+
+    // Tenta travar a edição das notas de um aluno para o usuário atual.
+    // Retorna true se conseguiu (ninguém mais editando, ou lock abandonado),
+    // false se outra pessoa está editando agora mesmo (nesse caso já cuida de
+    // mostrar o aviso e ligar o "polling" para detectar quando liberar).
+    async function tentarBloquearNotasAluno(alunoId) {
+        const { data: bloqueioExistente, error: erroLeitura } = await supabaseClient
+            .from('bloqueios_edicao')
+            .select('usuario_id, usuario_email, atualizado_em')
+            .eq('aluno_id', alunoId)
+            .maybeSingle();
+
+        console.debug('[bloqueio-notas] verificação', { alunoId, meuId: usuarioAtual && usuarioAtual.id, bloqueioExistente, erroLeitura });
+
+        if (erroLeitura) {
+            console.warn('Não foi possível checar o bloqueio de edição; liberando a edição por precaução.', erroLeitura);
+            mostrarAvisoBloqueio(null);
+            return true;
+        }
+
+        const ehDeOutraPessoa = bloqueioExistente && bloqueioExistente.usuario_id !== usuarioAtual.id;
+        const estaAtivo = bloqueioExistente && !bloqueioEstaExpirado(bloqueioExistente.atualizado_em);
+
+        if (ehDeOutraPessoa && estaAtivo) {
+            mostrarAvisoBloqueio(`${bloqueioExistente.usuario_email || 'Outro usuário'} está editando as notas deste aluno agora. Aguarde — assim que a pessoa terminar, a edição libera automaticamente aqui.`);
+            pararTimersBloqueio();
+            bloqueioPollId = setInterval(async () => {
+                const alunoAindaSelecionado = document.getElementById('selectAlunoNotas').value === alunoId;
+                if (!alunoAindaSelecionado) { pararTimersBloqueio(); return; }
+                await tentarBloquearNotasAluno(alunoId);
+            }, BLOQUEIO_POLL_MS);
+            return false;
+        }
+
+        // Livre, ou o lock existente é meu, ou está abandonado — assumo/renovo.
+        const { error: erroUpsert } = await supabaseClient.from('bloqueios_edicao').upsert({
+            aluno_id: alunoId,
+            usuario_id: usuarioAtual.id,
+            usuario_email: usuarioAtual.email,
+            atualizado_em: new Date().toISOString()
+        });
+
+        if (erroUpsert) {
+            // Provavelmente perdeu a corrida para outra pessoa entre a leitura e
+            // aqui — trata como bloqueado e deixa o polling acima assumir.
+            console.warn('Não foi possível travar a edição (provável concorrência).', erroUpsert);
+            mostrarAvisoBloqueio('Outro usuário acabou de começar a editar este aluno. Aguarde um instante.');
+            pararTimersBloqueio();
+            bloqueioPollId = setInterval(async () => {
+                const alunoAindaSelecionado = document.getElementById('selectAlunoNotas').value === alunoId;
+                if (!alunoAindaSelecionado) { pararTimersBloqueio(); return; }
+                await tentarBloquearNotasAluno(alunoId);
+            }, BLOQUEIO_POLL_MS);
+            return false;
+        }
+
+        mostrarAvisoBloqueio(null);
+        iniciarHeartbeatBloqueio(alunoId);
+        return true;
+    }
+
+    function iniciarHeartbeatBloqueio(alunoId) {
+        pararTimersBloqueio();
+        bloqueioAtual = { alunoId };
+        bloqueioHeartbeatId = setInterval(() => {
+            supabaseClient.from('bloqueios_edicao').upsert({
+                aluno_id: alunoId,
+                usuario_id: usuarioAtual.id,
+                usuario_email: usuarioAtual.email,
+                atualizado_em: new Date().toISOString()
+            }).then(({ error }) => {
+                if (error) console.warn('Não foi possível renovar o bloqueio de edição.', error);
+            });
+        }, BLOQUEIO_HEARTBEAT_MS);
+    }
+
+    async function carregarNotasAluno() {
         const alunoId = document.getElementById('selectAlunoNotas').value;
         const container = document.getElementById('painel-notas-container');
-        
+
+        // Trocou de aluno (ou limpou a seleção): libera o lock do aluno anterior.
+        if (bloqueioAtual && bloqueioAtual.alunoId !== alunoId) {
+            liberarBloqueioAtual();
+        } else {
+            pararTimersBloqueio();
+        }
+        mostrarAvisoBloqueio(null);
+
         if (!alunoId) {
             container.style.display = 'none';
             return;
@@ -3359,6 +3576,10 @@
         document.getElementById('novaAvaliacaoObs').value = ne.observacao || '';
         toggleNovaAvaliacaoCampos();
         renderCamposInfo(ne.campos || []);
+
+        // Tenta travar a edição desse aluno para o usuário atual; se alguém já
+        // estiver editando, mostrarAvisoBloqueio já cuida de avisar e desabilitar.
+        await tentarBloquearNotasAluno(alunoId);
     }
 
     function calcularMediaLinha(input) {
@@ -3476,6 +3697,11 @@
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
 
+        if (!bloqueioAtual || bloqueioAtual.alunoId !== alunoId) {
+            alert('Não foi possível confirmar que você ainda está com a edição deste aluno travada (a conexão pode ter oscilado). Selecione o aluno novamente antes de salvar.');
+            return;
+        }
+
         MATERIAS.forEach(m => {
             if (!aluno.notas[m]) aluno.notas[m] = {};
 
@@ -3548,7 +3774,7 @@
         });
     }
 
-    function renderizarRelatorio() {
+    async function renderizarRelatorio() {
         const alunoId = document.getElementById('selectAlunoRelatorio').value;
         if (!alunoId) return;
 
@@ -3563,7 +3789,7 @@
         document.getElementById('pdf-matricula').innerText = aluno.matricula ? aluno.matricula.split('-').reverse().join('/') : '-';
         document.getElementById('pdf-tel').innerText = aluno.telefone;
         document.getElementById('pdf-nee').innerText = aluno.nee;
-        document.getElementById('pdf-foto').src = obterFotoAluno(aluno.id);
+        document.getElementById('pdf-foto').src = await carregarFotoSobDemanda(aluno.id);
 
         const tbodyNotas = document.getElementById('pdf-tabela-notas');
         tbodyNotas.innerHTML = '';
@@ -3863,12 +4089,16 @@
         XLSX.writeFile(wb, nomeArquivo);
     }
 
-    function gerarPDF() {
+    async function gerarPDF() {
         const alunoId = document.getElementById('selectAlunoRelatorio').value;
         if (!alunoId) return alert("Selecione um aluno primeiro.");
 
         const aluno = db.alunos.find(a => a.id === alunoId);
         const element = document.getElementById('pdf-template');
+
+        // Garante que a foto (que pode ainda não ter terminado de carregar sob
+        // demanda) esteja pronta antes de capturar o PDF.
+        document.getElementById('pdf-foto').src = await carregarFotoSobDemanda(alunoId);
 
         window.scrollTo(0, 0);
 
@@ -3937,7 +4167,7 @@
             for (let i = 0; i < alunosTurma.length; i++) {
                 const aluno = alunosTurma[i];
                 selectRelatorio.value = aluno.id;
-                renderizarRelatorio();
+                await renderizarRelatorio();
 
                 const blob = await gerarPDFBlobAluno(aluno);
                 const nomeArquivo = `Relatorio_${String(i + 1).padStart(2, '0')}_${(aluno.nome || 'Aluno')
@@ -4060,7 +4290,7 @@
                 <div class="col-12 col-md-6 col-lg-6 d-flex">
                     <div class="buscativa-card d-flex align-items-center justify-content-between w-100">
                         <div class="d-flex align-items-center me-3 overflow-hidden">
-                            <img src="${obterFotoAluno(a.id)}" class="buscativa-img me-3 flex-shrink-0">
+                            <img class="lazy-foto-aluno buscativa-img me-3 flex-shrink-0" data-foto-aluno="${a.id}" src="${fotosCache[a.id] || PLACEHOLDER_FOTO}">
                             <div class="text-truncate">
                                 <div class="fw-bold text-truncate fs-5" style="line-height: 1.2;">
                                     ${a.nome}
@@ -4101,6 +4331,7 @@
                 </div>
             `;
         });
+        ativarFotosLazy(grid);
     }
 
     // --- DASHBOARD ALERTAS ---
@@ -4185,23 +4416,19 @@
         if (listNotas.innerHTML === '') listNotas.innerHTML = '<li class="list-group-item text-muted text-center py-3">Nenhum aluno ativo em situação de alerta de notas.</li>';
     }
 </script>
-    <!-- --- PWA: manifest + service worker gerados em tempo de execução --- -->
+    <!-- --- PWA: manifest gerado em tempo de execução --- -->
     <!-- Como este sistema é distribuído como um único arquivo HTML, o manifest
-         e o service worker são criados dinamicamente (via Blob) em vez de
-         serem arquivos separados. Isso permite "Instalar app" / "Adicionar à
-         tela inicial" no navegador. O cache offline do service worker só
-         funciona quando o arquivo é aberto por http(s) (ex.: um servidor local
-         ou hospedagem), pois navegadores bloqueiam service workers no
-         protocolo file://. Aberto direto como arquivo, o sistema continua
-         funcionando normalmente — só a instalação/cache via service worker
-         fica indisponível. -->
+         é criado dinamicamente (via Blob) em vez de ser um arquivo separado.
+         Isso permite "Instalar app" / "Adicionar à tela inicial" no navegador.
+         O sistema depende de internet (fala com o Supabase o tempo todo) —
+         não há cache de páginas nem funcionamento offline. -->
     <script>
         (function configurarPWA() {
             try {
                 const manifest = {
                     name: "Sistema de Gestão Escolar",
                     short_name: "Gestão Escolar",
-                    description: "Sistema offline de gestão escolar (notas, frequência, relatórios).",
+                    description: "Sistema de gestão escolar (notas, frequência, relatórios).",
                     start_url: location.pathname + location.search,
                     scope: location.pathname.replace(/[^/]*$/, ''),
                     display: "standalone",
@@ -4220,41 +4447,22 @@
                 const manifestLink = document.getElementById('pwa-manifest-link');
                 if (manifestLink) manifestLink.href = URL.createObjectURL(manifestBlob);
 
-                if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-                    const swCode = `
-                        const CACHE_NOME = 'gestao-escolar-cache-v1';
-                        self.addEventListener('install', (event) => {
-                            self.skipWaiting();
-                            event.waitUntil(
-                                caches.open(CACHE_NOME).then((cache) => cache.add(self.registration.scope))
-                            );
-                        });
-                        self.addEventListener('activate', (event) => {
-                            event.waitUntil(self.clients.claim());
-                        });
-                        self.addEventListener('fetch', (event) => {
-                            if (event.request.method !== 'GET') return;
-                            event.respondWith(
-                                caches.match(event.request).then((cacheado) => {
-                                    const buscaRede = fetch(event.request).then((resposta) => {
-                                        if (resposta && resposta.ok) {
-                                            caches.open(CACHE_NOME).then((cache) => cache.put(event.request, resposta.clone()));
-                                        }
-                                        return resposta;
-                                    }).catch(() => cacheado);
-                                    return cacheado || buscaRede;
-                                })
-                            );
-                        });
-                    `;
-                    const swBlob = new Blob([swCode], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(swBlob);
-                    navigator.serviceWorker.register(swUrl).catch((err) => {
-                        console.warn('Não foi possível registrar o service worker do PWA:', err);
+                // Limpeza: versões anteriores deste sistema registravam um
+                // service worker com cache offline. Quem já tinha instalado
+                // precisa que ele seja removido, senão o cache antigo
+                // continuaria servindo uma versão desatualizada da página.
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then((registros) => {
+                        registros.forEach((registro) => registro.unregister());
+                    });
+                }
+                if ('caches' in window) {
+                    caches.keys().then((chaves) => {
+                        chaves.forEach((chave) => caches.delete(chave));
                     });
                 }
             } catch (e) {
-                console.warn('Não foi possível configurar o PWA (manifest/service worker):', e);
+                console.warn('Não foi possível configurar o manifest do PWA:', e);
             }
         })();
     </script>
