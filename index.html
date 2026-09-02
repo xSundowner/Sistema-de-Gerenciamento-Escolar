@@ -3453,7 +3453,18 @@
         return !!select && select.value === alunoId;
     }
 
+    // Contador de tentativas de checagem de bloqueio. Cada chamada de
+    // tentarBloquearNotasAluno (seja a inicial, seja de um "polling") pega um
+    // número novo; se, quando a resposta do banco chegar, já existir uma
+    // tentativa MAIS NOVA em andamento, essa resposta antiga é descartada e
+    // não mexe mais na tela — evita duas checagens sobrepostas "brigando"
+    // pelo mesmo aviso (uma delas mais lenta sobrescrevendo por cima da outra
+    // depois que a edição já tinha sido liberada de verdade).
+    let bloqueioTentativaAtual = 0;
+
     async function tentarBloquearNotasAluno(alunoId) {
+        const minhaTentativa = ++bloqueioTentativaAtual;
+
         const { data: bloqueioExistente, error: erroLeitura } = await supabaseClient
             .from('bloqueios_edicao')
             .select('usuario_id, usuario_email, atualizado_em')
@@ -3462,9 +3473,9 @@
 
         console.debug('[bloqueio-notas] verificação', { alunoId, meuId: usuarioAtual && usuarioAtual.id, bloqueioExistente, erroLeitura });
 
-        // A resposta chegou, mas o usuário já trocou de aluno enquanto isso —
-        // essa informação não serve mais pra tela atual, descarta.
-        if (!alunoAindaEhOSelecionado(alunoId)) return false;
+        // Já existe uma tentativa mais nova rodando (ou o usuário trocou de
+        // aluno) — essa resposta não serve mais pra tela atual, descarta.
+        if (minhaTentativa !== bloqueioTentativaAtual || !alunoAindaEhOSelecionado(alunoId)) return false;
 
         if (erroLeitura) {
             console.warn('Não foi possível checar o bloqueio de edição; liberando a edição por precaução.', erroLeitura);
@@ -3493,8 +3504,9 @@
             atualizado_em: new Date().toISOString()
         });
 
-        // De novo: o usuário pode ter trocado de aluno enquanto o upsert rodava.
-        if (!alunoAindaEhOSelecionado(alunoId)) {
+        // De novo: pode ter surgido uma tentativa mais nova, ou o usuário
+        // trocou de aluno, enquanto o upsert rodava.
+        if (minhaTentativa !== bloqueioTentativaAtual || !alunoAindaEhOSelecionado(alunoId)) {
             // Já garantimos o lock no banco, mas ninguém está mais olhando pra
             // ele na tela — libera de novo pra não ficar preso sem necessidade.
             supabaseClient.from('bloqueios_edicao').delete().eq('aluno_id', alunoId).eq('usuario_id', usuarioAtual.id);
