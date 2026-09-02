@@ -1922,7 +1922,7 @@
     // uma conta nova (auth.signUp), para não substituir a sessão do próprio
     // admin no navegador.
     const supabaseAdminAux = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: false, autoRefreshToken: false }
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: 'sb-admin-aux-sem-sessao' }
     });
     const SISTEMA_DADOS_ID = "principal"; // linha única, compartilhada entre todos os usuários da escola
     const FOTOS_BUCKET = "fotos";
@@ -3444,6 +3444,15 @@
     // Retorna true se conseguiu (ninguém mais editando, ou lock abandonado),
     // false se outra pessoa está editando agora mesmo (nesse caso já cuida de
     // mostrar o aviso e ligar o "polling" para detectar quando liberar).
+    // Verifica se "alunoId" ainda é o aluno selecionado na tela agora. Usado
+    // pra descartar respostas atrasadas do banco depois que o usuário já
+    // trocou de aluno (ou limpou a seleção) — sem isso, uma resposta lenta
+    // podia "pisar" no estado novo da tela com informação de um aluno antigo.
+    function alunoAindaEhOSelecionado(alunoId) {
+        const select = document.getElementById('selectAlunoNotas');
+        return !!select && select.value === alunoId;
+    }
+
     async function tentarBloquearNotasAluno(alunoId) {
         const { data: bloqueioExistente, error: erroLeitura } = await supabaseClient
             .from('bloqueios_edicao')
@@ -3452,6 +3461,10 @@
             .maybeSingle();
 
         console.debug('[bloqueio-notas] verificação', { alunoId, meuId: usuarioAtual && usuarioAtual.id, bloqueioExistente, erroLeitura });
+
+        // A resposta chegou, mas o usuário já trocou de aluno enquanto isso —
+        // essa informação não serve mais pra tela atual, descarta.
+        if (!alunoAindaEhOSelecionado(alunoId)) return false;
 
         if (erroLeitura) {
             console.warn('Não foi possível checar o bloqueio de edição; liberando a edição por precaução.', erroLeitura);
@@ -3466,8 +3479,7 @@
             mostrarAvisoBloqueio(`${bloqueioExistente.usuario_email || 'Outro usuário'} está editando as notas deste aluno agora. Aguarde — assim que a pessoa terminar, a edição libera automaticamente aqui.`);
             pararTimersBloqueio();
             bloqueioPollId = setInterval(async () => {
-                const alunoAindaSelecionado = document.getElementById('selectAlunoNotas').value === alunoId;
-                if (!alunoAindaSelecionado) { pararTimersBloqueio(); return; }
+                if (!alunoAindaEhOSelecionado(alunoId)) { pararTimersBloqueio(); return; }
                 await tentarBloquearNotasAluno(alunoId);
             }, BLOQUEIO_POLL_MS);
             return false;
@@ -3481,6 +3493,14 @@
             atualizado_em: new Date().toISOString()
         });
 
+        // De novo: o usuário pode ter trocado de aluno enquanto o upsert rodava.
+        if (!alunoAindaEhOSelecionado(alunoId)) {
+            // Já garantimos o lock no banco, mas ninguém está mais olhando pra
+            // ele na tela — libera de novo pra não ficar preso sem necessidade.
+            supabaseClient.from('bloqueios_edicao').delete().eq('aluno_id', alunoId).eq('usuario_id', usuarioAtual.id);
+            return false;
+        }
+
         if (erroUpsert) {
             // Provavelmente perdeu a corrida para outra pessoa entre a leitura e
             // aqui — trata como bloqueado e deixa o polling acima assumir.
@@ -3488,8 +3508,7 @@
             mostrarAvisoBloqueio('Outro usuário acabou de começar a editar este aluno. Aguarde um instante.');
             pararTimersBloqueio();
             bloqueioPollId = setInterval(async () => {
-                const alunoAindaSelecionado = document.getElementById('selectAlunoNotas').value === alunoId;
-                if (!alunoAindaSelecionado) { pararTimersBloqueio(); return; }
+                if (!alunoAindaEhOSelecionado(alunoId)) { pararTimersBloqueio(); return; }
                 await tentarBloquearNotasAluno(alunoId);
             }, BLOQUEIO_POLL_MS);
             return false;
