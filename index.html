@@ -2370,9 +2370,17 @@
                 <td class="text-center">
                     ${u.id === usuarioAtual.id
                         ? '<span class="text-muted small">Você</span>'
-                        : `<button class="btn btn-sm btn-outline-secondary" onclick="alterarPapelUsuario('${u.id}', '${u.role === 'admin' ? 'professor' : 'admin'}')">
-                             Tornar ${u.role === 'admin' ? 'Professor' : 'Admin'}
-                           </button>`
+                        : `<div class="btn-group btn-group-sm">
+                             <button class="btn btn-outline-secondary" onclick="alterarPapelUsuario('${u.id}', '${u.role === 'admin' ? 'professor' : 'admin'}')">
+                               Tornar ${u.role === 'admin' ? 'Professor' : 'Admin'}
+                             </button>
+                             <button class="btn btn-outline-primary" title="Editar e-mail" onclick="editarEmailUsuario('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}')">
+                               <i class="fas fa-envelope"></i>
+                             </button>
+                             <button class="btn btn-outline-danger" title="Excluir usuário" onclick="excluirUsuario('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}')">
+                               <i class="fas fa-trash"></i>
+                             </button>
+                           </div>`
                     }
                 </td>
             </tr>
@@ -2419,6 +2427,51 @@
         document.getElementById('novoUsuarioPapel').value = 'professor';
         alert('Usuário criado! Repasse o e-mail e a senha provisória para a pessoa.');
         listarUsuarios();
+    }
+
+    // --- GERENCIAMENTO DE USUÁRIOS (via Edge Function 'admin-gerenciar-usuario') ---
+    // Excluir conta e trocar e-mail de login são operações administrativas que
+    // exigem a service_role key do Supabase. Essa chave NUNCA pode ficar no
+    // navegador, então essas duas ações chamam uma Edge Function publicada no
+    // projeto Supabase, que confere se quem está pedindo é admin e só então
+    // executa a operação com privilégios (veja instruções de publicação).
+    async function chamarFuncaoAdminUsuario(payload) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const { data, error } = await supabaseClient.functions.invoke('admin-gerenciar-usuario', {
+            body: payload,
+            headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (error) {
+            let msg = error.message;
+            try { const ctx = await error.context.json(); if (ctx && ctx.error) msg = ctx.error; } catch (e) {}
+            throw new Error(msg);
+        }
+        return data;
+    }
+
+    async function editarEmailUsuario(id, emailAtual) {
+        if (!usuarioEhAdmin()) return;
+        const novoEmail = prompt('Novo e-mail de login para este usuário:', emailAtual);
+        if (!novoEmail || novoEmail.trim() === '' || novoEmail.trim() === emailAtual) return;
+        try {
+            await chamarFuncaoAdminUsuario({ acao: 'editar_email', id, novo_email: novoEmail.trim() });
+            alert('E-mail atualizado! Avise a pessoa que ela deve usar o novo e-mail para fazer login (a senha continua a mesma).');
+            listarUsuarios();
+        } catch (e) {
+            alert('Erro ao editar e-mail: ' + e.message);
+        }
+    }
+
+    async function excluirUsuario(id, email) {
+        if (!usuarioEhAdmin()) return;
+        if (!confirm(`Tem certeza que deseja excluir a conta de "${email}"? Essa pessoa perderá o acesso imediatamente. Essa ação não pode ser desfeita.`)) return;
+        try {
+            await chamarFuncaoAdminUsuario({ acao: 'excluir', id });
+            alert('Usuário excluído.');
+            listarUsuarios();
+        } catch (e) {
+            alert('Erro ao excluir usuário: ' + e.message);
+        }
     }
 
     // --- PERSISTÊNCIA NA NUVEM (SUPABASE) ---
