@@ -1935,6 +1935,7 @@
     let bloqueioAtual = null;   // { alunoId } — aluno cujo lock EU seguro agora
     let bloqueioHeartbeatId = null;
     let bloqueioPollId = null;
+    let aguardandoLiberacaoDe = null; // alunoId cujo lock de outra pessoa eu estou esperando liberar
 
     let db = {
         alunos: [],
@@ -3482,6 +3483,25 @@
         }
     }
 
+    // Mostra um aviso verde e temporário avisando que a tela acabou de puxar
+    // a versão mais nova dos dados (porque a pessoa que estava editando
+    // liberou o aluno). Some sozinho depois de alguns segundos.
+    function avisarNotasAtualizadas() {
+        const aviso = document.getElementById('aviso-bloqueio-notas');
+        const texto = document.getElementById('aviso-bloqueio-notas-texto');
+        if (!aviso || !texto) return;
+        aviso.classList.remove('alert-warning');
+        aviso.classList.add('alert-success');
+        texto.textContent = 'A pessoa que estava editando terminou — as notas na tela foram atualizadas agora com o que ela salvou.';
+        aviso.style.display = 'flex';
+        clearTimeout(avisarNotasAtualizadas._timer);
+        avisarNotasAtualizadas._timer = setTimeout(() => {
+            aviso.style.display = 'none';
+            aviso.classList.remove('alert-success');
+            aviso.classList.add('alert-warning');
+        }, 5000);
+    }
+
     // Libera (apaga) o lock que EU seguro no momento, se houver. Chamado ao
     // trocar de aluno, sair da seção de Notas, ou deslogar.
     async function liberarBloqueioAtual() {
@@ -3543,6 +3563,7 @@
         const estaAtivo = bloqueioExistente && !bloqueioEstaExpirado(bloqueioExistente.atualizado_em);
 
         if (ehDeOutraPessoa && estaAtivo) {
+            aguardandoLiberacaoDe = alunoId;
             mostrarAvisoBloqueio(`${bloqueioExistente.usuario_email || 'Outro usuário'} está editando as notas deste aluno agora. Aguarde — assim que a pessoa terminar, a edição libera automaticamente aqui.`);
             pararTimersBloqueio();
             bloqueioPollId = setInterval(async () => {
@@ -3573,6 +3594,7 @@
             // Provavelmente perdeu a corrida para outra pessoa entre a leitura e
             // aqui — trata como bloqueado e deixa o polling acima assumir.
             console.warn('Não foi possível travar a edição (provável concorrência).', erroUpsert);
+            aguardandoLiberacaoDe = alunoId;
             mostrarAvisoBloqueio('Outro usuário acabou de começar a editar este aluno. Aguarde um instante.');
             pararTimersBloqueio();
             bloqueioPollId = setInterval(async () => {
@@ -3582,8 +3604,27 @@
             return false;
         }
 
-        mostrarAvisoBloqueio(null);
         iniciarHeartbeatBloqueio(alunoId);
+
+        if (aguardandoLiberacaoDe === alunoId) {
+            // Estávamos esperando outra pessoa liberar esse aluno: ela pode ter
+            // salvo notas novas enquanto isso, então busca a versão mais
+            // recente dos dados no servidor antes de liberar a edição aqui —
+            // sem isso, a tela continuaria mostrando o que já estava carregada
+            // desde antes de a pessoa começar a editar, e um salvamento nosso
+            // por cima apagaria o que ela acabou de fazer.
+            aguardandoLiberacaoDe = null;
+            await carregarDB();
+            if (minhaTentativa !== bloqueioTentativaAtual || !alunoAindaEhOSelecionado(alunoId)) return false;
+            const alunoAtualizado = db.alunos.find(a => a.id === alunoId);
+            if (alunoAtualizado) {
+                preencherPainelNotasAluno(alunoAtualizado);
+                avisarNotasAtualizadas();
+                return true;
+            }
+        }
+
+        mostrarAvisoBloqueio(null);
         return true;
     }
 
@@ -3612,6 +3653,7 @@
         } else {
             pararTimersBloqueio();
         }
+        if (aguardandoLiberacaoDe !== alunoId) aguardandoLiberacaoDe = null;
         mostrarAvisoBloqueio(null);
 
         if (!alunoId) {
@@ -3623,6 +3665,21 @@
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
 
+        preencherPainelNotasAluno(aluno);
+
+        // Tenta travar a edição desse aluno para o usuário atual; se alguém já
+        // estiver editando, mostrarAvisoBloqueio já cuida de avisar e desabilitar.
+        // Se, ao conquistar o lock, descobrir que estávamos esperando outra
+        // pessoa liberar, essa função também busca a versão mais nova dos
+        // dados e chama preencherPainelNotasAluno de novo sozinha.
+        await tentarBloquearNotasAluno(alunoId);
+    }
+
+    // Preenche a tela de notas (tabela de matérias, oficina, itinerários e
+    // "nova avaliação") com os dados de um aluno já carregado em memória.
+    // Extraída à parte para poder ser chamada de novo depois que os dados são
+    // atualizados do servidor (quando outra pessoa libera a edição do aluno).
+    function preencherPainelNotasAluno(aluno) {
         const tbody = document.getElementById('tabela-notas-materias');
         tbody.innerHTML = '';
 
@@ -3663,10 +3720,6 @@
         document.getElementById('novaAvaliacaoObs').value = ne.observacao || '';
         toggleNovaAvaliacaoCampos();
         renderCamposInfo(ne.campos || []);
-
-        // Tenta travar a edição desse aluno para o usuário atual; se alguém já
-        // estiver editando, mostrarAvisoBloqueio já cuida de avisar e desabilitar.
-        await tentarBloquearNotasAluno(alunoId);
     }
 
     function calcularMediaLinha(input) {
