@@ -1922,7 +1922,7 @@
     // uma conta nova (auth.signUp), para não substituir a sessão do próprio
     // admin no navegador.
     const supabaseAdminAux = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: false, autoRefreshToken: false, storageKey: 'sb-admin-aux-sem-sessao' }
+        auth: { persistSession: false, autoRefreshToken: false, storageKey: 'sb-admin-aux-sem-sessao', detectSessionInUrl: false }
     });
     const SISTEMA_DADOS_ID = "principal"; // linha única, compartilhada entre todos os usuários da escola
     const FOTOS_BUCKET = "fotos";
