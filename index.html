@@ -88,11 +88,38 @@
 
         .sidebar-status-line {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 8px;
             font-size: 12.5px;
             padding: 2px 6px 8px;
             line-height: 1.3;
+        }
+
+        .sidebar-status-line > i {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-conta-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .sidebar-conta-email {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-conta-badge {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .02em;
         }
 
         .sidebar-util-link {
@@ -220,7 +247,185 @@
 
         .table-responsive {
             border-radius: 8px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- Aviso de "Salvo" (Chamada / Plantão) --- */
+        .toast-salvo {
+            position: fixed;
+            left: 50%;
+            bottom: 26px;
+            transform: translateX(-50%) translateY(16px);
+            background: #198754;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 22px rgba(15,23,42,.2);
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .toast-salvo.mostrar {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-salvo.erro {
+            background: #dc3545;
+        }
+
+        @media (max-width: 767.98px) {
+            .toast-salvo {
+                bottom: 18px;
+                font-size: 13px;
+                padding: 9px 18px;
+            }
+        }
+        /* --- Log de Atividades --- */
+        .log-atividade-linha {
+            padding: 10px 0;
+            border-bottom: 1px solid #eef1f5;
+        }
+        .log-atividade-linha:last-child { border-bottom: none; }
+        .log-atividade-topo {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 3px;
+        }
+        .log-atividade-acao {
+            font-size: 13.5px;
+            color: #334155;
+        }
+
+        .avatar-usuario-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .status-online-dot {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            border: 2px solid #fff;
+        }
+
+        .status-online-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+        }
+
+        /* --- Tela de Usuários --- */
+        .avatar-usuario {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        .avatar-usuario.papel-admin {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            box-shadow: 0 3px 8px rgba(26,54,93,.25);
+        }
+
+        .avatar-usuario.papel-professor {
+            background: #94a3b8;
+        }
+
+        .badge-papel {
+            font-weight: 600;
+            font-size: 11.5px;
+            padding: 6px 13px;
+            letter-spacing: .01em;
+        }
+
+        .usuario-linha-nome {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* --- Tela de Relatório / PDF --- */
+        .grade-toggles-relatorio {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .toggle-categoria {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #f8fafc;
+            transition: background .15s ease, border-color .15s ease, color .15s ease;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #64748b;
+            user-select: none;
+        }
+
+        .toggle-categoria input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-categoria i {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            color: #94a3b8;
+            transition: color .15s ease;
+        }
+
+        .toggle-categoria:hover {
+            border-color: var(--secondary-color);
+        }
+
+        .toggle-categoria.ativo {
+            background: #eaf2fb;
+            border-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .toggle-categoria.ativo i {
+            color: var(--secondary-color);
+        }
+
+        .toggle-categoria .fa-check-circle {
+            margin-left: auto;
+            color: var(--secondary-color);
+            display: none;
+            font-size: 13px;
+        }
+
+        .toggle-categoria.ativo .fa-check-circle {
+            display: inline-block;
         }
 
         .input-data-sub {
@@ -782,6 +987,35 @@
             height: 58px !important;
         }
 
+        .buscativa-btn-label { display: none; }
+
+        @media (max-width: 767.98px) {
+            .buscativa-card {
+                flex-direction: column;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                padding: 16px !important;
+                gap: 14px;
+                min-height: 0;
+            }
+            .buscativa-info-wrap { margin-right: 0 !important; }
+            .buscativa-img { width: 56px; height: 56px; }
+            .buscativa-acoes-wrap {
+                flex-direction: row !important;
+                width: 100%;
+            }
+            .buscativa-btn-zap {
+                border-radius: 10px !important;
+                width: auto !important;
+                height: 44px !important;
+                flex: 1;
+                gap: 7px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            .buscativa-btn-zap .fs-2 { font-size: 16px !important; }
+        }
+
         @media (max-width: 768px) {
             .mobile-topbar {
                 display: flex;
@@ -889,6 +1123,192 @@
         .calendar-detail-hint { border:1px dashed #dee2e6; border-radius:10px; padding:18px; text-align:center; font-size:.9rem; }
         .modal-content .calendar-detail-empty { min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 
+        /* --- Guias (Chamada / Plantão / Resumo / Frequência) --- */
+        #presencaTabs {
+            border-bottom: none;
+            background: #eef2f7;
+            padding: 6px;
+            border-radius: 13px;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        #presencaTabs .nav-link {
+            border: none;
+            border-radius: 9px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 13.5px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+        }
+        #presencaTabs .nav-link i { font-size: 13px; }
+        #presencaTabs .nav-link:hover:not(.active) {
+            color: var(--primary-color);
+            background: rgba(255,255,255,.65);
+        }
+        #presencaTabs .nav-link.active {
+            background: #fff;
+            color: var(--primary-color);
+            box-shadow: 0 2px 7px rgba(15,23,42,.09);
+        }
+        @media (max-width: 767.98px) {
+            #presencaTabs .nav-item { flex: 1 1 calc(50% - 4px); }
+            #presencaTabs .nav-link { justify-content: center; padding: 10px 6px; font-size: 12px; text-align: center; }
+        }
+
+        /* --- Cadastro de Alunos em telas pequenas: vira lista de cartões --- */
+        @media (max-width: 767.98px) {
+            .tabela-alunos thead { display: none; }
+            .tabela-alunos, .tabela-alunos tbody { display: block; width: 100%; }
+            .tabela-alunos tr {
+                display: grid;
+                grid-template-columns: 46px 1fr auto;
+                grid-template-areas:
+                    "foto nome status"
+                    "foto ra status"
+                    "serie serie serie"
+                    "matricula matricula matricula"
+                    "telefone telefone telefone"
+                    "nee nee nee"
+                    "acoes acoes acoes";
+                column-gap: 12px;
+                row-gap: 3px;
+                background: #fff;
+                border: 1px solid #eef1f5;
+                border-radius: 12px;
+                padding: 14px;
+                margin: 10px 0;
+                box-shadow: 0 1px 3px rgba(15,23,42,.04);
+            }
+            .tabela-alunos td { display: block; border: none !important; padding: 0 !important; }
+            .aluno-td-foto { grid-area: foto; }
+            .aluno-td-foto img { width: 44px !important; height: 44px !important; }
+            .aluno-td-nome { grid-area: nome; font-weight: 700; font-size: 15px; align-self: end; }
+            .aluno-td-ra { grid-area: ra; color: #94a3b8; font-size: 12px; align-self: start; }
+            .aluno-td-status { grid-area: status; align-self: center; justify-self: end; }
+            .aluno-td-serie, .aluno-td-matricula, .aluno-td-telefone {
+                font-size: 12.5px;
+                color: #475569;
+            }
+            .aluno-td-serie { grid-area: serie; border-top: 1px dashed #f1f5f9 !important; margin-top: 8px; padding-top: 8px !important; }
+            .aluno-td-matricula { grid-area: matricula; }
+            .aluno-td-telefone { grid-area: telefone; }
+            .aluno-td-telefone:empty { display: none; }
+            .aluno-td-serie::before { content: "Série: "; font-weight: 600; color: #334155; }
+            .aluno-td-matricula::before { content: "Matrícula: "; font-weight: 600; color: #334155; }
+            .aluno-td-telefone::before { content: "Tel: "; font-weight: 600; color: #334155; }
+            .aluno-td-nee { grid-area: nee; margin-top: 6px; }
+            .aluno-td-acoes {
+                grid-area: acoes;
+                display: flex !important;
+                gap: 6px;
+                margin-top: 10px;
+                padding-top: 10px !important;
+                border-top: 1px solid #f1f5f9 !important;
+            }
+            .aluno-td-acoes .btn { flex: 1; margin: 0 !important; }
+        }
+
+        /* --- Usuários em telas pequenas: vira lista de cartões --- */
+        @media (max-width: 767.98px) {
+            .tabela-usuarios thead { display: none; }
+            .tabela-usuarios, .tabela-usuarios tbody, .tabela-usuarios tr, .tabela-usuarios td {
+                display: block;
+                width: 100%;
+            }
+            .tabela-usuarios tr {
+                background: #fff;
+                border: 1px solid #eef1f5;
+                border-radius: 12px;
+                padding: 14px;
+                margin: 10px 0;
+                box-shadow: 0 1px 3px rgba(15,23,42,.04);
+            }
+            .tabela-usuarios td { border: none !important; padding: 0 !important; }
+            .tabela-usuarios td:nth-child(2) { margin: 10px 0; }
+            .tabela-usuarios td:nth-child(3) .btn-group { display: flex; width: 100%; }
+            .tabela-usuarios td:nth-child(3) .btn-group .btn { flex: 1; }
+        }
+
+        /* --- Tabela de Notas em telas pequenas: coluna da matéria fixa --- */
+        .aviso-arraste-tabela { display: none; }
+        @media (max-width: 767.98px) {
+            .aviso-arraste-tabela {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 12px;
+                color: #64748b;
+                padding: 8px 14px 0;
+            }
+            .tabela-notas { font-size: 12.5px; }
+            .tabela-notas th, .tabela-notas td { padding: 10px 8px !important; }
+            .tabela-notas th.th-materia,
+            .tabela-notas td.col-materia {
+                position: sticky;
+                left: 0;
+                z-index: 2;
+                background: #fff;
+                box-shadow: 2px 0 5px rgba(15,23,42,.07);
+                min-width: 92px;
+            }
+            .tabela-notas thead th.th-materia { background: #f8fafc; z-index: 3; }
+        }
+
+        /* --- Cabeçalhos de seção com botões: empilha no mobile --- */
+        @media (max-width: 767.98px) {
+            .cabecalho-secao { flex-direction: column; align-items: stretch !important; gap: 10px; }
+            .cabecalho-secao-acoes { display: flex; width: 100%; }
+            .cabecalho-secao-acoes .btn { flex: 1; margin: 0 !important; }
+        }
+
+        /* --- Chamada Diária em telas pequenas: vira lista de cartões --- */
+        /* Tudo aqui dentro do @media só existe abaixo de 768px — no desktop a
+           tabela .tabela-chamada continua exatamente como sempre foi. */
+        @media (max-width: 767.98px) {
+            .tabela-chamada thead { display: none; }
+            .tabela-chamada, .tabela-chamada tbody, .tabela-chamada tr, .tabela-chamada td {
+                display: block;
+                width: 100%;
+            }
+            .tabela-chamada tbody { padding: 8px; }
+            .tabela-chamada tr {
+                background: #fff;
+                border: 1px solid #eef1f5;
+                border-left: 4px solid #cbd5e1;
+                border-radius: 12px;
+                padding: 13px 15px 15px;
+                margin: 10px 0;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+            }
+            .tabela-chamada tr.chamada-presente { border-left-color: #198754; }
+            .tabela-chamada tr.chamada-ausente { border-left-color: #dc3545; }
+            .tabela-chamada td { border: none !important; padding: 0 !important; }
+            .tabela-chamada .chamada-aluno strong { font-size: 15px; }
+            .tabela-chamada .chamada-ra { display: block; color: #94a3b8; font-size: 12px; margin-top: 1px; }
+            .tabela-chamada .chamada-serie {
+                display: inline-block;
+                color: #64748b;
+                font-size: 11.5px;
+                font-weight: 600;
+                background: #f1f5f9;
+                border-radius: 6px;
+                padding: 2px 8px;
+                margin: 8px 0 12px;
+            }
+            .tabela-chamada .chamada-status-cell { text-align: left; }
+            .tabela-chamada .chamada-status-cell .btn-group { display: flex; width: 100%; }
+            .tabela-chamada .chamada-status-cell .btn-group .btn {
+                flex: 1;
+                padding: 11px 0;
+                font-size: 14px;
+                font-weight: 700;
+            }
+        }
+
         /* --- TELA DE LOGIN / AUTENTICAÇÃO --- */
         .auth-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;background:radial-gradient(circle at 15% 15%,rgba(66,153,225,.28),transparent 32%),radial-gradient(circle at 85% 85%,rgba(43,108,176,.28),transparent 34%),linear-gradient(135deg,#0f2747 0%,#173b67 48%,#245f96 100%)}
         .auth-overlay:before,.auth-overlay:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
@@ -918,6 +1338,12 @@
     </style>
 </head>
 <body>
+
+<!-- Aviso rápido de "salvo" / "erro ao salvar", usado na Chamada e no Plantão -->
+<div id="toast-salvo" class="toast-salvo" role="status" aria-live="polite">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-salvo-texto">Salvo</span>
+</div>
 
 <!-- TELA DE LOGIN / CRIAÇÃO DE SENHA / RECUPERAÇÃO -->
 <div id="tela-auth" class="auth-overlay">
@@ -1112,9 +1538,9 @@
 
             <!-- SECTION 2: ALUNOS (CRUD) -->
             <div id="sec-alunos" class="content-section" style="display:none;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 cabecalho-secao">
                     <h3><i class="fas fa-user-graduate me-2 text-primary"></i>Cadastro de Alunos</h3>
-                    <div>
+                    <div class="cabecalho-secao-acoes">
                         <button class="btn btn-success me-2" onclick="exportarExcelAlunosFiltrados()"><i class="fas fa-file-excel me-1"></i> Exportar Excel</button>
                         <button class="btn btn-primary apenas-admin" onclick="abrirModalAluno()"><i class="fas fa-plus me-1"></i> Novo Aluno</button>
                     </div>
@@ -1141,7 +1567,7 @@
                 <div class="card-custom">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0 tabela-app">
+                            <table class="table align-middle mb-0 tabela-app tabela-alunos">
                                 <thead>
                                     <tr>
                                         <th>Foto</th>
@@ -1171,18 +1597,18 @@
             <div id="sec-presenca" class="content-section" style="display:none;">
                 <h3 class="mb-4"><i class="fas fa-calendar-check me-2 text-primary"></i>Registro de Presença & Plantão</h3>
                 
-                <ul class="nav nav-tabs mb-4" id="presencaTabs" role="tablist">
+                <ul class="nav mb-4" id="presencaTabs" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" id="chamada-tab" data-bs-toggle="tab" data-bs-target="#tab-chamada" type="button">Chamada Diária</button>
+                        <button class="nav-link active" id="chamada-tab" data-bs-toggle="tab" data-bs-target="#tab-chamada" type="button"><i class="fas fa-clipboard-check"></i>Chamada Diária</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="plantao-tab" data-bs-toggle="tab" data-bs-target="#tab-plantao" type="button">Plantão de Dúvidas</button>
+                        <button class="nav-link" id="plantao-tab" data-bs-toggle="tab" data-bs-target="#tab-plantao" type="button"><i class="fas fa-chalkboard-teacher"></i>Plantão de Dúvidas</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="resumo-presenca-tab" data-bs-toggle="tab" data-bs-target="#tab-resumo-presenca" type="button">Resumo / Calendário</button>
+                        <button class="nav-link" id="resumo-presenca-tab" data-bs-toggle="tab" data-bs-target="#tab-resumo-presenca" type="button"><i class="fas fa-calendar-days"></i>Resumo / Calendário</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" id="frequencia-aluno-tab" data-bs-toggle="tab" data-bs-target="#tab-frequencia-aluno" type="button">Frequência por Aluno</button>
+                        <button class="nav-link" id="frequencia-aluno-tab" data-bs-toggle="tab" data-bs-target="#tab-frequencia-aluno" type="button"><i class="fas fa-user-check"></i>Frequência por Aluno</button>
                     </li>
                 </ul>
 
@@ -1210,7 +1636,7 @@
                         <div class="card-custom">
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table align-middle mb-0 tabela-app">
+                                    <table class="table align-middle mb-0 tabela-app tabela-chamada">
                                         <thead>
                                             <tr>
                                                 <th>Aluno</th>
@@ -1254,7 +1680,7 @@
                         <div class="card-custom mb-4">
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table align-middle mb-0 tabela-app">
+                                    <table class="table align-middle mb-0 tabela-app tabela-chamada">
                                         <thead>
                                             <tr>
                                                 <th>Aluno</th>
@@ -1321,6 +1747,7 @@
                         </div>
 
                         <div id="frequencia-aluno-resultado" style="display:none;">
+                            <div class="alert alert-info py-2 px-3 mb-3" id="freq-aviso-serie" style="display:none; font-size: 13px;"></div>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-3"><div class="card-custom p-3 summary-card"><div class="summary-label">Dias com chamada</div><div class="summary-value text-primary" id="freq-total-dias">0</div></div></div>
                                 <div class="col-md-3"><div class="card-custom p-3 summary-card"><div class="summary-label">Presenças / Faltas</div><div class="summary-value" id="freq-presencas-faltas">0 / 0</div></div></div>
@@ -1357,12 +1784,14 @@
                 </div>
 
                 <div id="painel-notas-container" style="display:none;">
+                    <div class="alert alert-info py-2 px-3 mb-3" id="notas-aviso-serie" style="display:none; font-size: 13px;"></div>
                     <!-- Matérias Base -->
                     <div class="card-custom mb-4">
                         <div class="card-header-custom">
                             <i class="fas fa-calculator me-2"></i>Notas das Matérias Base
                         </div>
                         <div class="card-body p-0">
+                            <div class="aviso-arraste-tabela"><i class="fas fa-arrows-left-right"></i>Arraste a tabela para o lado para ver todas as avaliações</div>
                             <div class="table-responsive">
                                 <table class="table table-bordered align-middle mb-0 text-center tabela-app tabela-notas">
                                     <thead>
@@ -1466,87 +1895,102 @@
 
             <!-- SECTION 5: RELATÓRIO / PDF -->
             <div id="sec-relatorio" class="content-section" style="display:none;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 cabecalho-secao">
                     <h3><i class="fas fa-file-invoice me-2 text-primary"></i>Resumo do Aluno e Emissão de PDF</h3>
-                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                    <div class="d-flex flex-wrap gap-2 justify-content-end cabecalho-secao-acoes">
                         <button class="btn btn-danger" onclick="gerarPDF()"><i class="fas fa-file-pdf me-1"></i> Baixar PDF para Assinatura</button>
                         <button class="btn btn-success" onclick="exportarExcelRelatorioAluno()"><i class="fas fa-file-excel me-1"></i> Baixar Excel</button>
                     </div>
                 </div>
 
                 <!-- Painel de Controle de Aluno e Opções de Visibilidade -->
-                <div class="card-custom p-4 mb-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Selecione o Aluno para Visualizar o Resumo:</label>
-                        <select id="selectAlunoRelatorio" class="form-select" onchange="renderizarRelatorio()">
-                            <option value="">-- Escolha um Aluno --</option>
-                        </select>
-                    </div>
-                    
-                    <hr class="my-3">
-
-                    <div class="border rounded p-3 mb-3 bg-light">
-                        <label class="form-label fw-bold mb-1" for="input-nome-escola">Nome da escola exibido no relatório</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="input-nome-escola" placeholder="Nome da escola">
-                            <button class="btn btn-primary" type="button" onclick="salvarNomeEscola()">
-                                <i class="fas fa-save me-1"></i> Salvar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="border rounded p-3 mb-3 bg-light">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-8">
-                                <label class="form-label fw-bold mb-1">Relatório de todos os alunos ativos da turma</label>
-                                <select id="selectTurmaRelatorioLote" class="form-select">
-                                    <option value="">-- Escolha uma turma --</option>
+                <div class="row g-4 mb-4 align-items-stretch">
+                    <div class="col-lg-7">
+                        <div class="card-custom h-100 mb-0">
+                            <div class="card-header-custom"><i class="fas fa-user-graduate me-2"></i>Aluno</div>
+                            <div class="card-body">
+                                <label class="form-label fw-bold small mb-1">Selecione o aluno para visualizar o resumo</label>
+                                <select id="selectAlunoRelatorio" class="form-select" onchange="renderizarRelatorio()">
+                                    <option value="">-- Escolha um Aluno --</option>
                                 </select>
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-primary w-100" type="button" onclick="gerarRelatoriosTurmaZip()">
-                                    <i class="fas fa-file-archive me-1"></i> Baixar PDFs da Turma (.ZIP)
-                                </button>
+
+                                <hr class="my-3">
+
+                                <label class="form-label fw-bold small mb-1">Relatório de todos os alunos ativos da turma</label>
+                                <div class="row g-2">
+                                    <div class="col-md-8">
+                                        <select id="selectTurmaRelatorioLote" class="form-select">
+                                            <option value="">-- Escolha uma turma --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-primary w-100" type="button" onclick="gerarRelatoriosTurmaZip()">
+                                            <i class="fas fa-file-zipper me-1"></i> Baixar ZIP
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-2">Gera um PDF individual para cada aluno <strong>ativo</strong> da turma selecionada (alunos inativos não entram), reunidos em um único arquivo ZIP.</small>
                             </div>
                         </div>
-                        <small class="text-muted">Será criado um PDF individual para cada aluno <strong>ativo</strong> da turma selecionada (alunos inativos não entram) e todos serão reunidos em um único arquivo ZIP.</small>
                     </div>
+                    <div class="col-lg-5">
+                        <div class="card-custom h-100 mb-0">
+                            <div class="card-header-custom"><i class="fas fa-school me-2"></i>Cabeçalho do Relatório</div>
+                            <div class="card-body">
+                                <label class="form-label fw-bold small mb-1" for="input-nome-escola">Nome da escola exibido no relatório</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="input-nome-escola" placeholder="Nome da escola">
+                                    <button class="btn btn-primary" type="button" onclick="salvarNomeEscola()">
+                                        <i class="fas fa-save me-1"></i> Salvar
+                                    </button>
+                                </div>
+                                <small class="text-muted d-block mt-2">Aparece no topo de todos os PDFs e Excels gerados.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Ativar / Desativar Seções do Relatório -->
-                    <div>
-                        <label class="form-label fw-bold d-block mb-2">
-                            <i class="fas fa-toggle-on me-1 text-primary"></i> Ativar / Desativar Categorias Exibidas no Relatório:
-                        </label>
-                        <small class="text-muted d-block mb-2">Essas categorias controlam tanto o PDF quanto o Excel — o que estiver desativado aqui não entra em nenhum dos dois.</small>
-                        <div class="d-flex flex-wrap gap-3">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-dados" data-target="pdf-sec-dados" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-dados">Dados Cadastrais</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-notas" data-target="pdf-sec-notas" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-notas">Notas e Avaliações</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-plantao" data-target="pdf-sec-plantao" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-plantao">Plantões de Dúvidas</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-oficina" data-target="pdf-sec-oficina" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-oficina">Registro de Oficina</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-itinerarios" data-target="pdf-sec-itinerarios" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-itinerarios">Itinerários Formativos</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-nova-eval" data-target="pdf-sec-nova-eval" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-nova-eval">Nova Avaliação</label>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input rel-toggle" type="checkbox" id="toggle-sec-assinatura" data-target="pdf-sec-assinatura" checked onchange="atualizarVisibilidadeSecoes()">
-                                <label class="form-check-label" for="toggle-sec-assinatura">Assinatura do Coordenador</label>
-                            </div>
+                <!-- Ativar / Desativar Seções do Relatório -->
+                <div class="card-custom mb-4">
+                    <div class="card-header-custom"><i class="fas fa-sliders me-2"></i>Categorias exibidas no relatório</div>
+                    <div class="card-body">
+                        <small class="text-muted d-block mb-3">Vale tanto para o PDF quanto para o Excel — o que estiver desativado aqui não entra em nenhum dos dois. Clique para ativar ou desativar.</small>
+                        <div class="grade-toggles-relatorio">
+                            <label class="toggle-categoria ativo" id="chip-sec-dados">
+                                <i class="fas fa-id-card"></i>Dados Cadastrais
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-dados" data-target="pdf-sec-dados" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-notas">
+                                <i class="fas fa-calculator"></i>Notas e Avaliações
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-notas" data-target="pdf-sec-notas" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-plantao">
+                                <i class="fas fa-comments"></i>Plantões de Dúvidas
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-plantao" data-target="pdf-sec-plantao" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-oficina">
+                                <i class="fas fa-tools"></i>Registro de Oficina
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-oficina" data-target="pdf-sec-oficina" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-itinerarios">
+                                <i class="fas fa-route"></i>Itinerários Formativos
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-itinerarios" data-target="pdf-sec-itinerarios" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-nova-eval">
+                                <i class="fas fa-file-circle-plus"></i>Nova Avaliação
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-nova-eval" data-target="pdf-sec-nova-eval" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
+                            <label class="toggle-categoria ativo" id="chip-sec-assinatura">
+                                <i class="fas fa-signature"></i>Assinatura do Coordenador
+                                <input class="rel-toggle" type="checkbox" id="toggle-sec-assinatura" data-target="pdf-sec-assinatura" checked onchange="atualizarVisibilidadeSecoes()">
+                                <i class="fas fa-check-circle"></i>
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1727,48 +2171,94 @@
 
             <!-- SECTION: USUÁRIOS (SOMENTE ADMIN) -->
             <div id="sec-usuarios" class="content-section" style="display:none;">
-                <h3 class="mb-4"><i class="fas fa-users-gear me-2 text-primary"></i>Usuários do Sistema</h3>
+                <div class="d-flex justify-content-between align-items-center mb-1 cabecalho-secao">
+                    <h3 class="mb-0"><i class="fas fa-users-gear me-2 text-primary"></i>Usuários do Sistema</h3>
+                    <button class="btn btn-outline-secondary cabecalho-secao-acoes" onclick="abrirLogAtividades()">
+                        <i class="fas fa-clock-rotate-left me-1"></i>Últimas alterações
+                    </button>
+                </div>
+                <p class="text-muted mb-4">Controle quem tem acesso ao sistema e o que cada pessoa pode fazer.</p>
 
-                <div class="card-custom p-3 mb-4">
-                    <h6 class="fw-bold mb-3">Criar novo usuário</h6>
-                    <form onsubmit="criarUsuario(event)">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">E-mail</label>
-                                <input type="email" id="novoUsuarioEmail" class="form-control" required placeholder="professor@email.com">
+                <div class="card-custom mb-4">
+                    <div class="card-header-custom">
+                        <i class="fas fa-user-plus me-2"></i>Criar novo usuário
+                    </div>
+                    <div class="card-body">
+                        <form onsubmit="criarUsuario(event)">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">E-mail</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-envelope text-muted"></i></span>
+                                        <input type="email" id="novoUsuarioEmail" class="form-control" required placeholder="professor@email.com">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Senha provisória</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-key text-muted"></i></span>
+                                        <input type="text" id="novoUsuarioSenha" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Papel</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-shield-halved text-muted"></i></span>
+                                        <select id="novoUsuarioPapel" class="form-select">
+                                            <option value="professor" selected>Professor</option>
+                                            <option value="admin">Administrador</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-user-plus me-1"></i>Criar</button>
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Senha provisória</label>
-                                <input type="text" id="novoUsuarioSenha" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Papel</label>
-                                <select id="novoUsuarioPapel" class="form-select">
-                                    <option value="professor" selected>Professor (só visualiza / não mexe no cadastro)</option>
-                                    <option value="admin">Administrador (acesso total)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-user-plus me-1"></i>Criar</button>
-                            </div>
-                        </div>
-                        <div id="criarUsuarioErro" class="text-danger small mt-2" style="display:none;"></div>
-                        <div class="text-muted small mt-2">Repasse o e-mail e a senha provisória para a pessoa; ela pode trocar a senha depois em "Esqueci minha senha" na tela de login.</div>
-                    </form>
+                            <div id="criarUsuarioErro" class="text-danger small mt-3" style="display:none;"></div>
+                            <div class="text-muted small mt-3"><i class="fas fa-circle-info me-1"></i>Repasse o e-mail e a senha provisória para a pessoa; ela pode trocar a senha depois em "Esqueci minha senha" na tela de login.</div>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="card-custom p-3">
-                    <h6 class="fw-bold mb-3">Usuários cadastrados</h6>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead><tr><th>E-mail</th><th>Papel</th><th class="text-center">Ações</th></tr></thead>
-                            <tbody id="tabelaUsuarios"></tbody>
-                        </table>
+                <div class="card-custom">
+                    <div class="card-header-custom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <span><i class="fas fa-list-check me-2"></i>Usuários cadastrados <span id="contadorUsuarios" class="badge rounded-pill bg-light text-secondary fw-normal ms-1"></span></span>
+                        <div class="input-group input-group-sm" style="max-width:230px;">
+                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="buscaUsuario" class="form-control" placeholder="Buscar por e-mail..." onkeyup="listarUsuarios()">
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table tabela-app tabela-usuarios align-middle mb-0">
+                                <thead><tr><th>Usuário</th><th>Papel</th><th class="text-center">Ações</th></tr></thead>
+                                <tbody id="tabelaUsuarios"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
+
         </main>
+    </div>
+</div>
+
+<!-- MODAL ÚLTIMAS ALTERAÇÕES (log de atividades) -->
+<div class="modal fade" id="modalLogAtividades" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-clock-rotate-left me-2 text-primary"></i>Últimas alterações</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="log-atividades-corpo">
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted me-auto">Mostrando as 100 alterações mais recentes.</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1864,11 +2354,15 @@
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label">Série / Etapa *</label>
-                                    <select id="alunoSerie" class="form-select" required>
+                                    <select id="alunoSerie" class="form-select" required onchange="avisarTrocaSerie()">
                                         <option value="1° Ano EM">1° Ano EM</option>
                                         <option value="2° Ano EM">2° Ano EM</option>
                                         <option value="3° Ano EM">3° Ano EM</option>
                                     </select>
+                                    <small class="text-muted d-block mt-1" id="alunoSerieDesdeInfo"></small>
+                                    <small class="text-warning d-block mt-1" id="alunoSerieAvisoTroca" style="display:none;">
+                                        <i class="fas fa-triangle-exclamation me-1"></i>Frequência e notas ficam guardadas separadas por série. Se essa for a primeira vez do aluno nessa série, a tela vai começar em branco; se ele já esteve nela antes, os dados voltam a aparecer como estavam.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -2249,9 +2743,63 @@
     }
 
     async function sair() {
+        pararPresencaOnline();
         await liberarBloqueioAtual();
         await supabaseClient.auth.signOut();
         location.reload();
+    }
+
+    // --- USUÁRIOS ONLINE (Supabase Realtime Presence) ---
+    // Cada aba logada "avisa" que está presente num canal compartilhado; toda
+    // aba conectada recebe a lista atualizada em tempo real. Não grava nada
+    // no banco — é só sinalização enquanto a conexão estiver aberta, então
+    // se a pessoa fechar a aba ou cair a internet, ela some da lista sozinha
+    // (sem precisar de nenhuma limpeza manual).
+    let canalPresencaOnline = null;
+    let presencaOnline = {}; // { usuarioId: true }
+
+    function iniciarPresencaOnline() {
+        if (!usuarioAtual || canalPresencaOnline) return;
+        canalPresencaOnline = supabaseClient.channel('usuarios-online', {
+            config: { presence: { key: usuarioAtual.id } }
+        });
+        canalPresencaOnline.on('presence', { event: 'sync' }, () => {
+            const estado = canalPresencaOnline.presenceState();
+            presencaOnline = {};
+            Object.keys(estado).forEach(id => { presencaOnline[id] = true; });
+            atualizarIndicadoresOnlineUsuarios();
+        });
+        canalPresencaOnline.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await canalPresencaOnline.track({ email: usuarioAtual.email, desde: new Date().toISOString() });
+            }
+        });
+    }
+
+    function pararPresencaOnline() {
+        if (canalPresencaOnline) {
+            supabaseClient.removeChannel(canalPresencaOnline);
+            canalPresencaOnline = null;
+        }
+        presencaOnline = {};
+    }
+
+    // Atualiza só os "pontinhos" de status na tela de Usuários, sem precisar
+    // recarregar a lista inteira do banco a cada mudança de presença.
+    function atualizarIndicadoresOnlineUsuarios() {
+        document.querySelectorAll('[data-usuario-online-id]').forEach(el => {
+            const online = !!presencaOnline[el.dataset.usuarioOnlineId];
+            el.classList.toggle('online', online);
+            el.title = online ? 'Online agora' : 'Offline';
+        });
+        document.querySelectorAll('[data-usuario-online-texto-id]').forEach(el => {
+            const online = !!presencaOnline[el.dataset.usuarioOnlineTextoId];
+            el.textContent = online ? 'Online agora' : 'Offline';
+            el.classList.toggle('bg-success-subtle', online);
+            el.classList.toggle('text-success', online);
+            el.classList.toggle('bg-light', !online);
+            el.classList.toggle('text-muted', !online);
+        });
     }
 
     // --- INICIALIZAÇÃO ---
@@ -2279,11 +2827,7 @@
         aplicarRestricoesPapel();
         await carregarDB();
         await inicializarFotos();
-        const indicadorConta = document.getElementById('indicador-conta');
-        if (indicadorConta && usuarioAtual) {
-            const rotuloPapel = papelUsuario === 'admin' ? 'Admin' : 'Professor';
-            indicadorConta.innerHTML = `<i class="fas fa-cloud"></i>${usuarioAtual.email} <span class="badge bg-light text-dark ms-1">${rotuloPapel}</span>`;
-        }
+        atualizarIndicadorSync('ok');
         modalAlunoBs = new bootstrap.Modal(document.getElementById('modalAluno'));
         document.getElementById('imgPreview').src = PLACEHOLDER_FOTO;
         document.getElementById('dataChamada').valueAsDate = new Date();
@@ -2299,6 +2843,7 @@
 
         atualizarDashboard();
         populasSelectsAlunos();
+        iniciarPresencaOnline();
 
         const inputNomeEscola = document.getElementById('input-nome-escola');
         if (inputNomeEscola) inputNomeEscola.value = (db.config && db.config.nomeEscola) ? db.config.nomeEscola : NOME_ESCOLA_PADRAO;
@@ -2347,54 +2892,94 @@
         return papelUsuario === 'admin';
     }
 
-    async function listarUsuarios() {
+    async function listarUsuarios(forcarAtualizacao) {
         const tbody = document.getElementById('tabelaUsuarios');
         if (!tbody) return;
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Carregando...</td></tr>';
 
-        const { data, error } = await supabaseClient
-            .from('perfis')
-            .select('id, email, role')
-            .order('email');
+        if (forcarAtualizacao || !listarUsuarios._cache) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-4">Carregando...</td></tr>';
+            const { data, error } = await supabaseClient
+                .from('perfis')
+                .select('id, email, role')
+                .order('email');
 
-        if (error) {
-            tbody.innerHTML = `<tr><td colspan="3" class="text-danger">Erro ao carregar usuários: ${error.message}</td></tr>`;
-            return;
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-danger py-4">Erro ao carregar usuários: ${error.message}</td></tr>`;
+                return;
+            }
+            listarUsuarios._cache = data || [];
         }
 
-        tbody.innerHTML = (data || []).map(u => `
+        const termo = (document.getElementById('buscaUsuario')?.value || '').trim().toLowerCase();
+        const usuarios = listarUsuarios._cache.filter(u => !termo || (u.email || '').toLowerCase().includes(termo));
+
+        const contador = document.getElementById('contadorUsuarios');
+        if (contador) contador.textContent = listarUsuarios._cache.length;
+
+        tbody.innerHTML = usuarios.map(u => {
+            const ehAdmin = u.role === 'admin';
+            const inicial = (u.email || '?').trim().charAt(0);
+            const emailEscapado = (u.email || '').replace(/'/g, "\\'");
+            const online = !!presencaOnline[u.id];
+            return `
             <tr>
-                <td>${u.email || '(sem e-mail)'}</td>
                 <td>
-                    <span class="badge ${u.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${u.role === 'admin' ? 'Administrador' : 'Professor'}</span>
+                    <div class="usuario-linha-nome">
+                        <div class="avatar-usuario-wrap">
+                            <div class="avatar-usuario ${ehAdmin ? 'papel-admin' : 'papel-professor'}">${inicial}</div>
+                            <span class="status-online-dot ${online ? 'online' : ''}" data-usuario-online-id="${u.id}" title="${online ? 'Online agora' : 'Offline'}"></span>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">${u.email || '(sem e-mail)'}</div>
+                            <div class="d-flex gap-1 flex-wrap">
+                                ${u.id === usuarioAtual.id ? '<span class="badge bg-light text-secondary fw-normal">Sua conta</span>' : ''}
+                                <span class="badge fw-normal ${online ? 'bg-success-subtle text-success' : 'bg-light text-muted'}" data-usuario-online-texto-id="${u.id}">${online ? 'Online agora' : 'Offline'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge rounded-pill badge-papel ${ehAdmin ? 'bg-primary' : 'bg-secondary'}">
+                        <i class="fas ${ehAdmin ? 'fa-user-shield' : 'fa-chalkboard-user'} me-1"></i>${ehAdmin ? 'Administrador' : 'Professor'}
+                    </span>
                 </td>
                 <td class="text-center">
                     ${u.id === usuarioAtual.id
-                        ? '<span class="text-muted small">Você</span>'
+                        ? '<span class="text-muted small">—</span>'
                         : `<div class="btn-group btn-group-sm">
-                             <button class="btn btn-outline-secondary" onclick="alterarPapelUsuario('${u.id}', '${u.role === 'admin' ? 'professor' : 'admin'}')">
-                               Tornar ${u.role === 'admin' ? 'Professor' : 'Admin'}
+                             <button class="btn btn-outline-secondary" ${ehAdmin ? 'disabled' : ''} title="${ehAdmin ? 'Não é possível rebaixar um administrador' : 'Tornar Admin'}" onclick="alterarPapelUsuario('${u.id}', '${ehAdmin ? 'professor' : 'admin'}')">
+                               <i class="fas fa-arrows-rotate me-1"></i>${ehAdmin ? 'Professor' : 'Admin'}
                              </button>
-                             <button class="btn btn-outline-primary" title="Editar e-mail" onclick="editarEmailUsuario('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}')">
+                             <button class="btn btn-outline-primary" title="Editar e-mail" onclick="editarEmailUsuario('${u.id}', '${emailEscapado}')">
                                <i class="fas fa-envelope"></i>
                              </button>
-                             <button class="btn btn-outline-danger" title="Excluir usuário" onclick="excluirUsuario('${u.id}', '${(u.email || '').replace(/'/g, "\\'")}')">
+                             <button class="btn btn-outline-danger" ${ehAdmin ? 'disabled' : ''} title="${ehAdmin ? 'Não é possível excluir um administrador' : 'Excluir usuário'}" onclick="excluirUsuario('${u.id}', '${emailEscapado}')">
                                <i class="fas fa-trash"></i>
                              </button>
                            </div>`
                     }
                 </td>
-            </tr>
-        `).join('') || '<tr><td colspan="3" class="text-center text-muted">Nenhum usuário encontrado.</td></tr>';
+            </tr>`;
+        }).join('') || `<tr><td colspan="3" class="text-center text-muted py-4"><i class="fas fa-user-slash mb-2 d-block" style="font-size:22px;"></i>${termo ? 'Nenhum usuário encontrado para essa busca.' : 'Nenhum usuário encontrado.'}</td></tr>`;
     }
 
     async function alterarPapelUsuario(id, novoPapel) {
+        const alvo = (listarUsuarios._cache || []).find(u => u.id === id);
+        if (alvo && alvo.role === 'admin' && novoPapel === 'professor') {
+            alert('Não é possível rebaixar um administrador a professor por aqui.');
+            return;
+        }
+        if (novoPapel === 'admin') {
+            const confirmou = confirm(`Tornar "${alvo ? alvo.email : 'este usuário'}" administrador?\n\nUm administrador tem acesso total: cria e exclui alunos, gerencia outros usuários e restaura backups. Depois de promovido, não é possível rebaixar essa conta de volta a professor por aqui.`);
+            if (!confirmou) return;
+        }
         const { error } = await supabaseClient.from('perfis').update({ role: novoPapel }).eq('id', id);
         if (error) {
             alert('Erro ao alterar papel do usuário: ' + error.message);
             return;
         }
-        listarUsuarios();
+        registrarLog('Alterou o papel de um usuário', `${alvo ? alvo.email : id} → ${novoPapel === 'admin' ? 'Administrador' : 'Professor'}`);
+        listarUsuarios(true);
     }
 
     async function criarUsuario(event) {
@@ -2427,7 +3012,8 @@
         document.getElementById('novoUsuarioSenha').value = '';
         document.getElementById('novoUsuarioPapel').value = 'professor';
         alert('Usuário criado! Repasse o e-mail e a senha provisória para a pessoa.');
-        listarUsuarios();
+        registrarLog('Criou um usuário', `${email} (${papel === 'admin' ? 'Administrador' : 'Professor'})`);
+        listarUsuarios(true);
     }
 
     // --- GERENCIAMENTO DE USUÁRIOS (via Edge Function 'admin-gerenciar-usuario') ---
@@ -2457,7 +3043,8 @@
         try {
             await chamarFuncaoAdminUsuario({ acao: 'editar_email', id, novo_email: novoEmail.trim() });
             alert('E-mail atualizado! Avise a pessoa que ela deve usar o novo e-mail para fazer login (a senha continua a mesma).');
-            listarUsuarios();
+            registrarLog('Editou o e-mail de um usuário', `${emailAtual} → ${novoEmail.trim()}`);
+            listarUsuarios(true);
         } catch (e) {
             alert('Erro ao editar e-mail: ' + e.message);
         }
@@ -2465,11 +3052,17 @@
 
     async function excluirUsuario(id, email) {
         if (!usuarioEhAdmin()) return;
+        const alvo = (listarUsuarios._cache || []).find(u => u.id === id);
+        if (alvo && alvo.role === 'admin') {
+            alert('Não é possível excluir outro administrador por aqui.');
+            return;
+        }
         if (!confirm(`Tem certeza que deseja excluir a conta de "${email}"? Essa pessoa perderá o acesso imediatamente. Essa ação não pode ser desfeita.`)) return;
         try {
             await chamarFuncaoAdminUsuario({ acao: 'excluir', id });
             alert('Usuário excluído.');
-            listarUsuarios();
+            registrarLog('Excluiu um usuário', email);
+            listarUsuarios(true);
         } catch (e) {
             alert('Erro ao excluir usuário: ' + e.message);
         }
@@ -2485,10 +3078,11 @@
     function atualizarIndicadorSync(status) {
         if (!indicadorSyncEl) indicadorSyncEl = document.getElementById('indicador-conta');
         if (!indicadorSyncEl || !usuarioAtual) return;
+        const rotuloPapel = papelUsuario === 'admin' ? 'Admin' : 'Professor';
         const mapa = {
-            ok: `<i class="fas fa-cloud"></i>${usuarioAtual.email}`,
-            salvando: `<i class="fas fa-cloud-arrow-up"></i>Salvando...`,
-            erro: `<i class="fas fa-triangle-exclamation"></i>Sem conexão — não foi possível salvar`
+            ok: `<i class="fas fa-cloud"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email" title="${usuarioAtual.email}">${usuarioAtual.email}</span><span class="badge bg-light text-dark sidebar-conta-badge">${rotuloPapel}</span></span>`,
+            salvando: `<i class="fas fa-cloud-arrow-up"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email">Salvando...</span></span>`,
+            erro: `<i class="fas fa-triangle-exclamation"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email">Sem conexão — não foi possível salvar</span></span>`
         };
         indicadorSyncEl.innerHTML = mapa[status] || mapa.ok;
         indicadorSyncEl.className = 'sidebar-status-line ' + (status === 'erro' ? 'sidebar-status-warning' : 'sidebar-status-success');
@@ -2533,6 +3127,7 @@
         const nomeEscolaEl = document.getElementById('pdf-nome-escola');
         if (nomeEscolaEl) nomeEscolaEl.innerText = db.config.nomeEscola;
         salvarDB();
+        registrarLog('Alterou o nome da escola', db.config.nomeEscola);
         alert('Nome da escola atualizado com sucesso!');
     }
 
@@ -2549,11 +3144,87 @@
                 .upsert({ id: SISTEMA_DADOS_ID, dados: db, atualizado_em: new Date().toISOString() });
             if (error) throw error;
             atualizarIndicadorSync('ok');
+            return true;
         } catch (e) {
             console.error("Erro ao salvar no Supabase.", e);
             atualizarIndicadorSync('erro');
             alert("Não foi possível salvar essa alteração — sem conexão com o servidor. Verifique sua internet e tente novamente.");
+            return false;
         }
+    }
+
+    // Mostra um avisinho rápido (pill verde/vermelho) confirmando que algo
+    // acabou de ser salvo — ou avisando que não deu certo. Usado na Chamada
+    // Diária e no Plantão de Dúvidas, que salvam sozinhos a cada clique, sem
+    // nenhum botão "Salvar" — esse é o retorno visual de que funcionou.
+    let toastSalvoTimer = null;
+    function mostrarToastSalvo(sucesso, mensagem) {
+        const toast = document.getElementById('toast-salvo');
+        if (!toast) return;
+        const texto = document.getElementById('toast-salvo-texto');
+        const icone = toast.querySelector('i');
+        toast.classList.toggle('erro', !sucesso);
+        icone.className = sucesso ? 'fas fa-check-circle' : 'fas fa-triangle-exclamation';
+        texto.textContent = mensagem || (sucesso ? 'Salvo' : 'Não foi possível salvar');
+        toast.classList.add('mostrar');
+        clearTimeout(toastSalvoTimer);
+        toastSalvoTimer = setTimeout(() => toast.classList.remove('mostrar'), sucesso ? 1600 : 3500);
+    }
+
+    // --- LOG DE ATIVIDADES ---
+    // Registra uma linha no histórico de "quem fez o quê" (tabela
+    // log_atividades, separada do resto — assim não pesa no
+    // carregamento normal do sistema, só é lida quando alguém abre o
+    // popup). Nunca trava a ação do usuário por causa disso: se o
+    // registro falhar (sem internet, por exemplo), só avisa no
+    // console e segue a vida — o log é um extra, não algo crítico.
+    function registrarLog(acao, detalhe) {
+        if (!usuarioAtual) return;
+        supabaseClient.from('log_atividades').insert({
+            usuario_email: usuarioAtual.email,
+            acao: acao,
+            detalhe: detalhe || null
+        }).then(({ error }) => {
+            if (error) console.warn('Não foi possível registrar o log de atividade.', error);
+        });
+    }
+
+    async function abrirLogAtividades() {
+        const modalEl = document.getElementById('modalLogAtividades');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const corpo = document.getElementById('log-atividades-corpo');
+        corpo.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Carregando...</div>';
+        modal.show();
+
+        const { data, error } = await supabaseClient
+            .from('log_atividades')
+            .select('criado_em, usuario_email, acao, detalhe')
+            .order('criado_em', { ascending: false })
+            .limit(100);
+
+        if (error) {
+            corpo.innerHTML = `<div class="text-danger text-center py-4">Não foi possível carregar o histórico: ${error.message}</div>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            corpo.innerHTML = '<div class="text-muted text-center py-4">Nenhuma atividade registrada ainda.</div>';
+            return;
+        }
+
+        corpo.innerHTML = data.map(l => {
+            const dt = new Date(l.criado_em);
+            const dataFormatada = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="log-atividade-linha">
+                    <div class="log-atividade-topo">
+                        <span class="fw-semibold">${l.usuario_email}</span>
+                        <span class="text-muted small">${dataFormatada}</span>
+                    </div>
+                    <div class="log-atividade-acao">${l.acao}${l.detalhe ? ' — ' + l.detalhe : ''}</div>
+                </div>
+            `;
+        }).join('');
     }
 
     async function exportarBackup() {
@@ -2617,6 +3288,7 @@
                     fotosCache = await carregarTodasFotosDB();
 
                     salvarDB();
+                    registrarLog('Restaurou um backup', `${db.alunos.length} alunos no arquivo restaurado`);
                     listarAlunos();
                     alert("Backup restaurado com sucesso!");
                 } else {
@@ -2679,7 +3351,7 @@
             if (select && select.value) renderizarRelatorio();
         }
         if (sectionId === 'buscativa') renderizarBuscativa();
-        if (sectionId === 'usuarios') listarUsuarios();
+        if (sectionId === 'usuarios') listarUsuarios(true);
     }
 
     function irParaNotasDoAluno(alunoId) {
@@ -2709,14 +3381,104 @@
         }
     }
 
+    // --- DADOS POR SÉRIE (frequência e notas isoladas por série) ---
+    // Cada aluno guarda uma "gaveta" de dados por rótulo de série em que já
+    // esteve: aluno.registrosPorSerie = { "1° Ano EM": {presencas, notas}, ... }
+    // Trocar a série do aluno troca qual gaveta fica ativa. Se o aluno volta
+    // pra uma série em que já esteve (mesmo rótulo), reabre a MESMA gaveta —
+    // os dados de lá reaparecem exatamente como estavam, sem depender de
+    // data nem de quanto tempo passou.
+    //
+    // garantirRegistrosPorSerie() migra, na primeira vez que um aluno é
+    // tocado nesta sessão, qualquer formato antigo (períodos em sequência de
+    // uma versão anterior desse recurso, ou os dados soltos originais com
+    // corte por data) para essa estrutura, sem perder nada já registrado.
+    function garantirRegistrosPorSerie(aluno) {
+        if (aluno.registrosPorSerie) return;
+        aluno.registrosPorSerie = {};
+
+        if (aluno.periodos) {
+            // Vinha do modelo "períodos em sequência" (versão anterior deste
+            // mesmo recurso). Períodos com o mesmo rótulo se juntam na mesma
+            // gaveta.
+            aluno.periodos.forEach(p => {
+                const bucket = aluno.registrosPorSerie[p.serie] || { presencas: {}, notas: {} };
+                Object.assign(bucket.presencas, p.presencas || {});
+                Object.assign(bucket.notas, p.notas || {});
+                aluno.registrosPorSerie[p.serie] = bucket;
+            });
+            return;
+        }
+
+        // Dados originais soltos (de antes de qualquer um desses recursos
+        // existir), com no máximo um corte por data já registrado em
+        // historicoSeries.
+        const presencasFlat = aluno.presencas || {};
+        const historico = aluno.historicoSeries || [];
+        historico.forEach(h => {
+            const bucket = aluno.registrosPorSerie[h.serie] || { presencas: {}, notas: {} };
+            Object.keys(presencasFlat).forEach(data => {
+                if ((!h.desde || data >= h.desde) && (!h.ate || data <= h.ate)) {
+                    bucket.presencas[data] = presencasFlat[data];
+                }
+            });
+            if (h.notas) Object.assign(bucket.notas, h.notas);
+            aluno.registrosPorSerie[h.serie] = bucket;
+        });
+
+        const bucketAtual = aluno.registrosPorSerie[aluno.serie] || { presencas: {}, notas: {} };
+        const ultimoAte = historico.length ? historico[historico.length - 1].ate : null;
+        Object.keys(presencasFlat).forEach(data => {
+            if (!ultimoAte || data > ultimoAte) bucketAtual.presencas[data] = presencasFlat[data];
+        });
+        Object.assign(bucketAtual.notas, aluno.notas || {});
+        aluno.registrosPorSerie[aluno.serie] = bucketAtual;
+    }
+
+    // Retorna a gaveta (presenças + notas) de uma série específica do aluno
+    // (por padrão, a série atual dele), criando uma vazia se ainda não existir.
+    function bucketSerieAluno(aluno, serie) {
+        garantirRegistrosPorSerie(aluno);
+        const alvo = serie || aluno.serie;
+        if (!aluno.registrosPorSerie[alvo]) {
+            aluno.registrosPorSerie[alvo] = { presencas: {}, notas: {} };
+        }
+        return aluno.registrosPorSerie[alvo];
+    }
+
+    function presencasDoAluno(aluno) { return bucketSerieAluno(aluno).presencas; }
+    function notasDoAluno(aluno) { return bucketSerieAluno(aluno).notas; }
+
+    // Lista os rótulos de série (fora o atual) em que o aluno também tem
+    // dados guardados, pra avisos de "esse aluno também tem dados em...".
+    function seriesAnterioresDoAluno(aluno) {
+        garantirRegistrosPorSerie(aluno);
+        return Object.keys(aluno.registrosPorSerie).filter(s => s !== aluno.serie);
+    }
+
+    // Procura em qual série o aluno estava numa data específica (cada dia só
+    // existe na gaveta da série que estava ativa naquele momento). Usado pelo
+    // Resumo/Calendário pra mostrar corretamente quem estava em cada série em
+    // cada dia, mesmo depois de o aluno ter mudado de série.
+    function presencaAlunoNaData(aluno, data) {
+        garantirRegistrosPorSerie(aluno);
+        for (const serie in aluno.registrosPorSerie) {
+            const status = aluno.registrosPorSerie[serie].presencas[data];
+            if (status !== undefined) return { serie, status };
+        }
+        return null;
+    }
+
     // --- RESUMO / CALENDÁRIO DE PRESENÇA ---
     function obterRegistrosChamadaPorData(data, serieFiltro = '') {
         const registros = [];
         db.alunos.forEach(aluno => {
             if ((aluno.status || 'Ativo') !== 'Ativo') return;
-            if (serieFiltro && aluno.serie !== serieFiltro) return;
             if (aluno.matricula && aluno.matricula > data) return;
-            const status = aluno.presencas && aluno.presencas[data];
+            const achado = presencaAlunoNaData(aluno, data);
+            const serieEfetiva = achado ? achado.serie : aluno.serie;
+            if (serieFiltro && serieEfetiva !== serieFiltro) return;
+            const status = achado ? achado.status : null;
             if (status === 'P' || status === 'F') registros.push({ aluno, status });
         });
         return registros;
@@ -2917,7 +3679,7 @@
             return true;
         };
 
-        const presencas = aluno.presencas || {};
+        const presencas = presencasDoAluno(aluno);
         const datasChamada = Object.keys(presencas).filter(dentroDoPeriodo).sort((a, b) => new Date(b) - new Date(a));
         const plantoes = (aluno.plantoes || [])
             .filter(p => p.data && dentroDoPeriodo(p.data))
@@ -2930,6 +3692,17 @@
         resultado.style.display = 'block';
         lista.innerHTML = '';
         document.getElementById('freq-plantoes').innerText = totalPlantoes;
+
+        const avisoSerie = document.getElementById('freq-aviso-serie');
+        if (avisoSerie) {
+            const outrasSeries = seriesAnterioresDoAluno(aluno);
+            if (outrasSeries.length > 0) {
+                avisoSerie.style.display = 'block';
+                avisoSerie.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando a frequência da série atual (${aluno.serie}). Este aluno também tem frequência registrada em: ${outrasSeries.join(', ')} — consulte o histórico de série no cadastro dele.`;
+            } else {
+                avisoSerie.style.display = 'none';
+            }
+        }
 
         let totalPresencas = 0;
         datasChamada.forEach(d => {
@@ -2982,6 +3755,8 @@
     }
 
     // --- CRUD ALUNOS ---
+    let alunoSerieOriginalEdicao = null;
+
     async function abrirModalAluno(id = null) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem criar ou editar o cadastro de um aluno.'); return; }
         document.getElementById('formAluno').reset();
@@ -2991,6 +3766,9 @@
         fotoBase64Temp = '';
         document.getElementById('imgPreview').src = PLACEHOLDER_FOTO;
         document.getElementById('modalAlunoTitle').innerText = 'Cadastrar Novo Aluno';
+        alunoSerieOriginalEdicao = null;
+        document.getElementById('alunoSerieDesdeInfo').textContent = '';
+        document.getElementById('alunoSerieAvisoTroca').style.display = 'none';
 
         if (id) {
             const aluno = db.alunos.find(a => a.id === id);
@@ -3006,6 +3784,11 @@
                 document.getElementById('alunoSerie').value = aluno.serie;
                 document.getElementById('alunoNEE').value = aluno.nee;
                 document.getElementById('modalAlunoTitle').innerText = 'Editar Aluno';
+                alunoSerieOriginalEdicao = aluno.serie;
+                const outrasSeries = seriesAnterioresDoAluno(aluno);
+                if (outrasSeries.length > 0) {
+                    document.getElementById('alunoSerieDesdeInfo').textContent = `Também tem frequência/notas registradas em: ${outrasSeries.join(', ')}.`;
+                }
                 modalAlunoBs.show();
                 const fotoAtual = await carregarFotoSobDemanda(aluno.id);
                 if (fotoAtual !== PLACEHOLDER_FOTO) {
@@ -3016,6 +3799,15 @@
             }
         }
         modalAlunoBs.show();
+    }
+
+    // Mostra o aviso de "a frequência antiga vira histórico" só quando a
+    // série escolhida no formulário é diferente da que o aluno tinha.
+    function avisarTrocaSerie() {
+        const aviso = document.getElementById('alunoSerieAvisoTroca');
+        if (!aviso) return;
+        const novaSerie = document.getElementById('alunoSerie').value;
+        aviso.style.display = (alunoSerieOriginalEdicao && novaSerie !== alunoSerieOriginalEdicao) ? 'block' : 'none';
     }
 
     async function previewFoto(event) {
@@ -3053,9 +3845,8 @@
 
         let alunoData = existingIndex >= 0 ? db.alunos[existingIndex] : {
             id: id,
-            presencas: {},
+            registrosPorSerie: {},
             plantoes: [],
-            notas: {},
             oficina: { data: '', tema: '', aplicador: '' },
             itinerarios: [],
             novaAvaliacao: { necessario: 'NÃO', observacao: '', campos: [] }
@@ -3074,10 +3865,14 @@
         // Ela é guardada separadamente no Supabase Storage e espelhada em fotosCache.
         delete alunoData.foto;
 
+        // Frequência e notas ficam guardadas por série (aluno.registrosPorSerie),
+        // não misturadas num único lugar. Trocar a série aqui simplesmente
+        // troca qual gaveta fica ativa: bucketSerieAluno() cria uma vazia na
+        // primeira vez que a série é usada, e se o aluno volta pra uma série
+        // em que já esteve, os dados de lá reaparecem do jeito que estavam.
+        bucketSerieAluno(alunoData);
         MATERIAS.forEach(m => {
-            if (!alunoData.notas[m]) {
-                alunoData.notas[m] = {};
-            }
+            if (!notasDoAluno(alunoData)[m]) notasDoAluno(alunoData)[m] = {};
         });
 
         if (existingIndex >= 0) {
@@ -3095,6 +3890,7 @@
         }
 
         salvarDB();
+        registrarLog(existingIndex >= 0 ? 'Editou o cadastro de um aluno' : 'Cadastrou um novo aluno', `${alunoData.nome} (RA ${alunoData.ra})`);
         modalAlunoBs.hide();
         listarAlunos();
     }
@@ -3102,10 +3898,12 @@
     async function excluirAluno(id) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem excluir um aluno.'); return; }
         if (confirm("Tem certeza que deseja excluir este aluno? Todos os registros serão perdidos.")) {
+            const aluno = db.alunos.find(a => a.id === id);
             db.alunos = db.alunos.filter(a => a.id !== id);
             await excluirFotoDB(id);
             delete fotosCache[id];
             salvarDB();
+            registrarLog('Excluiu um aluno', aluno ? `${aluno.nome} (RA ${aluno.ra})` : id);
             listarAlunos();
         }
     }
@@ -3169,15 +3967,15 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td><img class="lazy-foto-aluno" data-foto-aluno="${a.id}" src="${fotoSrc}" width="40" height="40" style="object-fit:cover; border-radius:50%;"></td>
-                    <td><strong>${a.ra}</strong></td>
-                    <td>${a.nome}</td>
-                    <td>${a.serie}</td>
-                    <td>${dtMatricula}</td>
-                    <td>${statusBadge}</td>
-                    <td>${a.telefone}</td>
-                    <td>${neeBadge}</td>
-                    <td class="text-center">
+                    <td class="aluno-td-foto"><img class="lazy-foto-aluno" data-foto-aluno="${a.id}" src="${fotoSrc}" width="40" height="40" style="object-fit:cover; border-radius:50%;"></td>
+                    <td class="aluno-td-ra"><strong>${a.ra}</strong></td>
+                    <td class="aluno-td-nome">${a.nome}</td>
+                    <td class="aluno-td-serie">${a.serie}</td>
+                    <td class="aluno-td-matricula">${dtMatricula}</td>
+                    <td class="aluno-td-status">${statusBadge}</td>
+                    <td class="aluno-td-telefone">${a.telefone}</td>
+                    <td class="aluno-td-nee">${neeBadge}</td>
+                    <td class="text-center aluno-td-acoes">
                         <button class="btn btn-sm btn-outline-primary me-1 apenas-admin" title="Editar Aluno" onclick="abrirModalAluno('${a.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-sm btn-outline-warning me-1" title="Notas e Atividades" onclick="irParaNotasDoAluno('${a.id}')"><i class="fas fa-book-open"></i></button>
                         <button class="btn btn-sm btn-outline-info me-1" title="Relatório / PDF" onclick="irParaRelatorioDoAluno('${a.id}')"><i class="fas fa-file-invoice"></i></button>
@@ -3283,12 +4081,14 @@
         }
 
         lista.forEach(aluno => {
-            const statusSalvo = (aluno.presencas && aluno.presencas[data]) ? aluno.presencas[data] : null;
+            const presencasAluno = presencasDoAluno(aluno);
+            const statusSalvo = presencasAluno[data] || null;
+            const classeStatus = statusSalvo === 'P' ? 'chamada-presente' : statusSalvo === 'F' ? 'chamada-ausente' : 'chamada-pendente';
             tbody.innerHTML += `
-                <tr>
-                    <td><strong>${aluno.nome}</strong> (RA: ${aluno.ra})</td>
-                    <td>${aluno.serie}</td>
-                    <td class="text-center">
+                <tr class="${classeStatus}">
+                    <td class="chamada-aluno"><strong>${aluno.nome}</strong> <span class="chamada-ra">(RA: ${aluno.ra})</span></td>
+                    <td class="chamada-serie">${aluno.serie}</td>
+                    <td class="text-center chamada-status-cell">
                         <div class="btn-group" role="group">
                             <input type="radio" class="btn-check" name="pres_${aluno.id}" id="p_${aluno.id}" value="P" ${statusSalvo === 'P' ? 'checked' : ''} onclick="alternarChamada('${aluno.id}', 'P', this)">
                             <label class="btn btn-outline-success btn-sm" for="p_${aluno.id}">Presente</label>
@@ -3302,28 +4102,41 @@
         });
     }
 
-    function alternarChamada(alunoId, val, el) {
+    async function alternarChamada(alunoId, val, el) {
         const data = document.getElementById('dataChamada').value;
         if (!data) return;
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
-        const atual = aluno.presencas && aluno.presencas[data] ? aluno.presencas[data] : null;
+        const presencasAluno = presencasDoAluno(aluno);
+        const atual = presencasAluno[data] || null;
+        const tr = el.closest('tr');
         if (atual === val) {
-            if (aluno.presencas) delete aluno.presencas[data];
-            salvarDB();
+            delete presencasAluno[data];
+            const ok = await salvarDB();
+            mostrarToastSalvo(ok, ok ? 'Marcação removida' : undefined);
+            registrarLog('Removeu marcação de chamada', `${aluno.nome} — ${data.split('-').reverse().join('/')}`);
             carregarChamadaData();
-        } else salvarChamadaIndividual(alunoId, val);
+        } else {
+            await salvarChamadaIndividual(alunoId, val);
+            // Atualiza a cor da borda do cartão (no mobile) na hora, sem
+            // precisar recarregar a tabela inteira a cada clique.
+            if (tr) {
+                tr.classList.remove('chamada-presente', 'chamada-ausente', 'chamada-pendente');
+                tr.classList.add(val === 'P' ? 'chamada-presente' : 'chamada-ausente');
+            }
+        }
     }
 
-    function salvarChamadaIndividual(alunoId, val) {
+    async function salvarChamadaIndividual(alunoId, val) {
         const data = document.getElementById('dataChamada').value;
         if (!data) return;
 
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (aluno) {
-            if (!aluno.presencas) aluno.presencas = {};
-            aluno.presencas[data] = val;
-            salvarDB();
+            presencasDoAluno(aluno)[data] = val;
+            const ok = await salvarDB();
+            mostrarToastSalvo(ok);
+            registrarLog('Marcou chamada', `${aluno.nome} — ${val === 'P' ? 'Presente' : 'Ausente'} em ${data.split('-').reverse().join('/')}`);
         }
     }
 
@@ -3353,12 +4166,12 @@
 
         lista.forEach(aluno => {
             const temRegistro = (aluno.plantoes || []).some(p => p.materia === materia && p.data === data);
-            
+
             tbody.innerHTML += `
-                <tr>
-                    <td><strong>${aluno.nome}</strong> (RA: ${aluno.ra})</td>
-                    <td>${aluno.serie}</td>
-                    <td class="text-center">
+                <tr class="${temRegistro ? 'chamada-presente' : 'chamada-pendente'}">
+                    <td class="chamada-aluno"><strong>${aluno.nome}</strong> <span class="chamada-ra">(RA: ${aluno.ra})</span></td>
+                    <td class="chamada-serie">${aluno.serie}</td>
+                    <td class="text-center chamada-status-cell">
                         <div class="btn-group" role="group">
                             <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_p_${aluno.id}" value="P" ${temRegistro ? 'checked' : ''} onclick="alternarPlantao('${aluno.id}', 'P', this)">
                             <label class="btn btn-outline-success btn-sm" for="pl_p_${aluno.id}">Presente</label>
@@ -3372,21 +4185,30 @@
         });
     }
 
-    function alternarPlantao(alunoId, statusVal, el) {
+    async function alternarPlantao(alunoId, statusVal, el) {
         const data = document.getElementById('dataPlantao').value;
         const materia = document.getElementById('filtroMateriaPlantao').value;
         if (!data || !materia) return;
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
         const jaExiste = (aluno.plantoes || []).some(p => p.materia === materia && p.data === data);
+        const tr = el.closest('tr');
         if (statusVal === 'P' && jaExiste) {
             aluno.plantoes = aluno.plantoes.filter(p => !(p.materia === materia && p.data === data));
-            salvarDB();
+            const ok = await salvarDB();
+            mostrarToastSalvo(ok, ok ? 'Marcação removida' : undefined);
+            registrarLog('Removeu marcação de plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
             carregarPlantaoData();
-        } else alterarPlantaoIndividual(alunoId, statusVal);
+        } else {
+            await alterarPlantaoIndividual(alunoId, statusVal);
+            if (tr) {
+                tr.classList.remove('chamada-presente', 'chamada-pendente');
+                tr.classList.add(statusVal === 'P' ? 'chamada-presente' : 'chamada-pendente');
+            }
+        }
     }
 
-    function alterarPlantaoIndividual(alunoId, statusVal) {
+    async function alterarPlantaoIndividual(alunoId, statusVal) {
         const data = document.getElementById('dataPlantao').value;
         const materia = document.getElementById('filtroMateriaPlantao').value;
 
@@ -3410,7 +4232,9 @@
             aluno.plantoes = aluno.plantoes.filter(p => !(p.materia === materia && p.data === data));
         }
 
-        salvarDB();
+        const ok = await salvarDB();
+        mostrarToastSalvo(ok);
+        registrarLog('Marcou plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
     }
 
     // --- NOTAS & ATIVIDADES ---
@@ -3683,8 +4507,21 @@
         const tbody = document.getElementById('tabela-notas-materias');
         tbody.innerHTML = '';
 
+        const notasAluno = notasDoAluno(aluno);
+
+        const avisoSerieNotas = document.getElementById('notas-aviso-serie');
+        if (avisoSerieNotas) {
+            const outrasSeries = seriesAnterioresDoAluno(aluno);
+            if (outrasSeries.length > 0) {
+                avisoSerieNotas.style.display = 'block';
+                avisoSerieNotas.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando as notas da série atual (${aluno.serie}). Este aluno também tem notas registradas em: ${outrasSeries.join(', ')}.`;
+            } else {
+                avisoSerieNotas.style.display = 'none';
+            }
+        }
+
         MATERIAS.forEach(m => {
-            const n = (aluno.notas && aluno.notas[m]) ? aluno.notas[m] : {};
+            const n = notasAluno[m] || {};
             
             tbody.innerHTML += `
                 <tr>
@@ -3842,17 +4679,18 @@
             return;
         }
 
+        const notasAluno = notasDoAluno(aluno);
         MATERIAS.forEach(m => {
-            if (!aluno.notas[m]) aluno.notas[m] = {};
+            if (!notasAluno[m]) notasAluno[m] = {};
 
             const inpAulaoData = document.querySelector(`input[data-mat="${m}"][data-campo="aulao_data"]`);
-            if (inpAulaoData) aluno.notas[m]['aulao_data'] = inpAulaoData.value;
+            if (inpAulaoData) notasAluno[m]['aulao_data'] = inpAulaoData.value;
 
             ['av1', 'av2', 'av3', 'av4', 'av5', 'validacao'].forEach(key => {
                 const inpNota = document.querySelector(`input[data-mat="${m}"][data-campo="${key}_nota"]`);
                 const inpData = document.querySelector(`input[data-mat="${m}"][data-campo="${key}_data"]`);
-                if (inpNota) aluno.notas[m][`${key}_nota`] = inpNota.value;
-                if (inpData) aluno.notas[m][`${key}_data`] = inpData.value;
+                if (inpNota) notasAluno[m][`${key}_nota`] = inpNota.value;
+                if (inpData) notasAluno[m][`${key}_data`] = inpData.value;
             });
         });
 
@@ -3892,6 +4730,7 @@
         }
 
         salvarDB();
+        registrarLog('Editou notas e atividades', aluno.nome);
         alert("Notas e Atividades salvas com sucesso!");
     }
 
@@ -3911,6 +4750,8 @@
             if (el) {
                 el.style.display = toggle.checked ? 'block' : 'none';
             }
+            const chip = toggle.closest('.toggle-categoria');
+            if (chip) chip.classList.toggle('ativo', toggle.checked);
         });
     }
 
@@ -3935,7 +4776,7 @@
         tbodyNotas.innerHTML = '';
 
         MATERIAS.forEach(m => {
-            const n = (aluno.notas && aluno.notas[m]) ? aluno.notas[m] : {};
+            const n = notasDoAluno(aluno)[m] || {};
             
             const dtAulao = getDataVal(n, 'aulao');
             const dtAulaoFormatada = dtAulao ? dtAulao.split('-').reverse().join('/') : '-';
@@ -4136,7 +4977,7 @@
             const notasHeader = ['Matéria', 'Aulão (Data)', 'Av 1', 'Av 2', 'Av 3', 'Av 4', 'Av 5', 'Nota Validação', 'Visto do Professor', 'Visto do Coordenador'];
             const notasAoa = [notasHeader];
             MATERIAS.forEach(m => {
-                const n = (aluno.notas && aluno.notas[m]) ? aluno.notas[m] : {};
+                const n = notasDoAluno(aluno)[m] || {};
                 const dtAulao = getDataVal(n, 'aulao');
                 const dtAulaoFormatada = dtAulao ? dtAulao.split('-').reverse().join('/') : '-';
 
@@ -4346,7 +5187,7 @@
     function verificarPendenciaAluno(aluno) {
         let pendencias = [];
 
-        const presencas = aluno.presencas || {};
+        const presencas = presencasDoAluno(aluno);
         const datas = Object.keys(presencas);
         if (datas.length > 0) {
             const presentes = datas.filter(d => presencas[d] === 'P').length;
@@ -4358,7 +5199,7 @@
 
         let notaBaixa = false;
         MATERIAS.forEach(m => {
-            const n = (aluno.notas && aluno.notas[m]) ? aluno.notas[m] : {};
+            const n = notasDoAluno(aluno)[m] || {};
             const valNota = parseFloat(getNotaVal(n, 'validacao'));
             const keys = ['av1', 'av2', 'av3', 'av4', 'av5'];
             const vals = keys.map(k => parseFloat(getNotaVal(n, k))).filter(v => !isNaN(v));
@@ -4429,7 +5270,7 @@
             grid.innerHTML += `
                 <div class="col-12 col-md-6 col-lg-6 d-flex">
                     <div class="buscativa-card d-flex align-items-center justify-content-between w-100">
-                        <div class="d-flex align-items-center me-3 overflow-hidden">
+                        <div class="d-flex align-items-center me-3 overflow-hidden buscativa-info-wrap">
                             <img class="lazy-foto-aluno buscativa-img me-3 flex-shrink-0" data-foto-aluno="${a.id}" src="${fotosCache[a.id] || PLACEHOLDER_FOTO}">
                             <div class="text-truncate">
                                 <div class="fw-bold text-truncate fs-5" style="line-height: 1.2;">
@@ -4447,23 +5288,23 @@
                                 ${contatoHTML}
                             </div>
                         </div>
-                        <div class="flex-shrink-0 d-flex flex-column gap-2">
+                        <div class="flex-shrink-0 d-flex flex-column gap-2 buscativa-acoes-wrap">
                             ${numLimpo ? `
                                 <a href="${linkZap}" target="_blank" class="btn btn-success rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Contatar no WhatsApp">
-                                    <i class="fab fa-whatsapp fs-2"></i>
+                                    <i class="fab fa-whatsapp fs-2"></i><span class="buscativa-btn-label">WhatsApp</span>
                                 </a>
                             ` : `
                                 <button class="btn btn-secondary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" disabled title="Telefone Inválido">
-                                    <i class="fab fa-whatsapp fs-2"></i>
+                                    <i class="fab fa-whatsapp fs-2"></i><span class="buscativa-btn-label">WhatsApp</span>
                                 </button>
                             `}
                             ${temEmail ? `
                                 <a href="${mailtoLink}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Enviar e-mail" target="_blank">
-                                    <i class="fas fa-envelope fs-2"></i>
+                                    <i class="fas fa-envelope fs-2"></i><span class="buscativa-btn-label">E-mail</span>
                                 </a>
                             ` : `
                                 <button class="btn btn-secondary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" disabled title="E-mail não cadastrado">
-                                    <i class="fas fa-envelope fs-2"></i>
+                                    <i class="fas fa-envelope fs-2"></i><span class="buscativa-btn-label">E-mail</span>
                                 </button>
                             `}
                         </div>
@@ -4492,7 +5333,7 @@
         const alertasFreq = [];
 
         alunosAtivos.forEach(aluno => {
-            const presencas = aluno.presencas || {};
+            const presencas = presencasDoAluno(aluno);
             const datas = Object.keys(presencas);
             if (datas.length > 0) {
                 const presentes = datas.filter(d => presencas[d] === 'P').length;
@@ -4507,7 +5348,7 @@
             let detalhesVal = [];
 
             MATERIAS.forEach(m => {
-                const n = (aluno.notas && aluno.notas[m]) ? aluno.notas[m] : {};
+                const n = notasDoAluno(aluno)[m] || {};
                 const valNota = parseFloat(getNotaVal(n, 'validacao'));
                 const keys = ['av1', 'av2', 'av3', 'av4', 'av5'];
                 const vals = keys.map(k => parseFloat(getNotaVal(n, k))).filter(v => !isNaN(v));
