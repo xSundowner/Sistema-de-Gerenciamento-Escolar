@@ -3530,6 +3530,13 @@
         const item = lixeiraCache.find(l => l.id === id);
         if (!item) return;
         const aluno = item.dados;
+
+        const raEmUso = db.alunos.find(a => (a.ra || '').trim().toLowerCase() === (aluno.ra || '').trim().toLowerCase());
+        if (raEmUso) {
+            alert(`Não é possível restaurar: o RA ${aluno.ra} já está sendo usado por outro aluno cadastrado (${raEmUso.nome}). Ajuste o RA de um dos dois antes de restaurar.`);
+            return;
+        }
+
         aluno.status = 'Ativo';
 
         const ok = await salvarAlteracaoPontual((dadosFrescos) => {
@@ -4317,12 +4324,23 @@
         }
         const alunoComMesmoRA = db.alunos.find(a => a.id !== id && (a.ra || '').trim().toLowerCase() === raInformado.toLowerCase());
         if (alunoComMesmoRA) {
-            if ((alunoComMesmoRA.status || 'Ativo') === 'Excluído') {
-                alert(`Este RA (${raInformado}) já pertenceu a um aluno que foi excluído do sistema. Não é possível reutilizar o RA por aqui — se for a mesma pessoa, ela precisa ser restaurada em vez de recadastrada.`);
-            } else {
-                alert('Já existe um aluno cadastrado com este RA (' + raInformado + '). Verifique o cadastro antes de salvar.');
-            }
+            alert('Já existe um aluno cadastrado com este RA (' + raInformado + '). Verifique o cadastro antes de salvar.');
             return;
+        }
+        if (raInformado !== '') {
+            try {
+                const { data: excluidoComMesmoRA, error: erroCheckLixeira } = await supabaseClient
+                    .from('alunos_excluidos')
+                    .select('dados')
+                    .eq('dados->>ra', raInformado)
+                    .maybeSingle();
+                if (!erroCheckLixeira && excluidoComMesmoRA) {
+                    alert(`Este RA (${raInformado}) já pertenceu a "${excluidoComMesmoRA.dados.nome}", um aluno excluído do sistema. Não é possível reutilizar o RA por aqui — se for a mesma pessoa, restaure-a pela Lixeira em vez de recadastrar.`);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Não foi possível checar duplicidade de RA na lixeira.', e);
+            }
         }
 
         const telefoneInformado = document.getElementById('alunoTelefone').value.trim();
@@ -4990,6 +5008,7 @@
             const alunoAtualizado = db.alunos.find(a => a.id === alunoId);
             if (alunoAtualizado) {
                 preencherPainelNotasAluno(alunoAtualizado);
+                mostrarAvisoBloqueio(null); // destrava os campos (tira pointer-events:none)
                 avisarNotasAtualizadas();
                 return true;
             }
