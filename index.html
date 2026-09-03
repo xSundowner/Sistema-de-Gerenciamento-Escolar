@@ -2443,7 +2443,7 @@
                         <i class="fas fa-rotate-left me-1"></i>Reiniciar Dados
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Aluno</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarAluno">Salvar Aluno</button>
                 </div>
             </form>
         </div>
@@ -2477,6 +2477,22 @@
     `);
 
     const NOME_ESCOLA_PADRAO = "E.E PROFESSORA ISABEL LUCCI DE OLIVEIRA";
+
+    // Escapa texto antes de colocar dentro de HTML (innerHTML) — protege
+    // contra alguém digitar algo tipo "<script>" ou "<img onerror=...>" num
+    // campo livre (telefone, e-mail) e isso rodar na tela de outra pessoa
+    // depois. Nome já é travado na digitação (só letras); telefone e e-mail
+    // não têm essa restrição de caractere, então passam por aqui sempre que
+    // aparecem montados em HTML.
+    function escapeHtml(texto) {
+        if (texto === null || texto === undefined) return '';
+        return String(texto)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
     // --- SUPABASE: BACKEND NA NUVEM (substitui localStorage/IndexedDB/arquivo local) ---
     // A "anon key" é uma chave pública, feita para ficar no código do navegador.
@@ -2659,7 +2675,7 @@
             fotosCache[a.id] = a.foto;
             delete a.foto;
         }
-        salvarDB();
+        await salvarDB();
     }
 
     async function inicializarFotos() {
@@ -3027,7 +3043,7 @@
                             <span class="status-online-dot ${online ? 'online' : ''}" data-usuario-online-id="${u.id}" title="${online ? 'Online agora' : 'Offline'}"></span>
                         </div>
                         <div>
-                            <div class="fw-semibold">${u.email || '(sem e-mail)'}</div>
+                            <div class="fw-semibold">${escapeHtml(u.email) || '(sem e-mail)'}</div>
                             <div class="d-flex gap-1 flex-wrap">
                                 ${u.id === usuarioAtual.id ? '<span class="badge bg-light text-secondary fw-normal">Sua conta</span>' : ''}
                                 <span class="badge fw-normal ${online ? 'bg-success-subtle text-success' : 'bg-light text-muted'}" data-usuario-online-texto-id="${u.id}">${online ? 'Online agora' : 'Offline'}</span>
@@ -3181,7 +3197,7 @@
         if (!indicadorSyncEl || !usuarioAtual) return;
         const rotuloPapel = papelUsuario === 'admin' ? 'Admin' : 'Professor';
         const mapa = {
-            ok: `<i class="fas fa-cloud"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email" title="${usuarioAtual.email}">${usuarioAtual.email}</span><span class="badge bg-light text-dark sidebar-conta-badge">${rotuloPapel}</span></span>`,
+            ok: `<i class="fas fa-cloud"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email" title="${escapeHtml(usuarioAtual.email)}">${escapeHtml(usuarioAtual.email)}</span><span class="badge bg-light text-dark sidebar-conta-badge">${rotuloPapel}</span></span>`,
             salvando: `<i class="fas fa-cloud-arrow-up"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email">Salvando...</span></span>`,
             erro: `<i class="fas fa-triangle-exclamation"></i><span class="sidebar-conta-info"><span class="sidebar-conta-email">Sem conexão — não foi possível salvar</span></span>`
         };
@@ -3219,7 +3235,7 @@
         if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
     }
 
-    function salvarNomeEscola() {
+    async function salvarNomeEscola() {
         const input = document.getElementById('input-nome-escola');
         const nome = (input.value || '').trim();
         if (!db.config) db.config = {};
@@ -3227,7 +3243,8 @@
         input.value = db.config.nomeEscola;
         const nomeEscolaEl = document.getElementById('pdf-nome-escola');
         if (nomeEscolaEl) nomeEscolaEl.innerText = db.config.nomeEscola;
-        salvarDB();
+        const ok = await salvarDB();
+        if (!ok) { alert('Não foi possível salvar — sem conexão. Tente de novo.'); return; }
         registrarLog('Alterou o nome da escola', db.config.nomeEscola);
         alert('Nome da escola atualizado com sucesso!');
     }
@@ -3248,6 +3265,45 @@
             return true;
         } catch (e) {
             console.error("Erro ao salvar no Supabase.", e);
+            atualizarIndicadorSync('erro');
+            alert("Não foi possível salvar essa alteração — sem conexão com o servidor. Verifique sua internet e tente novamente.");
+            return false;
+        }
+    }
+
+    // Salva UMA alteração pontual (ex: marcar a presença de um aluno) sem
+    // correr o risco de apagar por cima o que outra pessoa salvou entre o
+    // carregamento da tela e agora. Em vez de subir o "db" inteiro como está
+    // na memória deste navegador (que pode estar desatualizado), busca a
+    // versão mais recente do banco bem na hora, aplica só essa mudança
+    // específica nela (função "aplicar"), e salva essa versão mesclada.
+    // "aplicar" recebe os dados frescos e mexe neles diretamente.
+    // Ao final, o "db" local é substituído pela versão que acabou de ser
+    // salva — então a tela reflete também qualquer coisa que outra pessoa
+    // tenha salvo nesse meio-tempo, não só a própria mudança.
+    async function salvarAlteracaoPontual(aplicar) {
+        atualizarIndicadorSync('salvando');
+        try {
+            const { data, error: erroLeitura } = await supabaseClient
+                .from('sistema_dados')
+                .select('dados')
+                .eq('id', SISTEMA_DADOS_ID)
+                .maybeSingle();
+            if (erroLeitura) throw erroLeitura;
+
+            const dadosFrescos = (data && data.dados) ? data.dados : db;
+            aplicar(dadosFrescos);
+
+            const { error: erroGravacao } = await supabaseClient
+                .from('sistema_dados')
+                .upsert({ id: SISTEMA_DADOS_ID, dados: dadosFrescos, atualizado_em: new Date().toISOString() });
+            if (erroGravacao) throw erroGravacao;
+
+            db = dadosFrescos;
+            atualizarIndicadorSync('ok');
+            return true;
+        } catch (e) {
+            console.error("Erro ao salvar alteração pontual.", e);
             atualizarIndicadorSync('erro');
             alert("Não foi possível salvar essa alteração — sem conexão com o servidor. Verifique sua internet e tente novamente.");
             return false;
@@ -3377,11 +3433,12 @@
         `).join('');
     }
 
-    function restaurarAluno(id) {
+    async function restaurarAluno(id) {
         const aluno = db.alunos.find(a => a.id === id);
         if (!aluno) return;
         aluno.status = 'Ativo';
-        salvarDB();
+        const ok = await salvarDB();
+        if (!ok) { alert('Não foi possível restaurar agora — sem conexão. Tente de novo.'); aluno.status = 'Excluído'; return; }
         registrarLog('Restaurou um aluno excluído', `${aluno.nome} (RA ${aluno.ra})`);
         renderizarLixeira();
         listarAlunos();
@@ -3396,10 +3453,12 @@
             alert('Não digitou "EXCLUIR" certinho — nada foi apagado.');
             return;
         }
+        const alunosAntes = db.alunos;
         db.alunos = db.alunos.filter(a => a.id !== id);
+        const ok = await salvarDB();
+        if (!ok) { alert('Não foi possível excluir agora — sem conexão. Tente de novo.'); db.alunos = alunosAntes; return; }
         await excluirFotoDB(id);
         delete fotosCache[id];
-        salvarDB();
         registrarLog('Excluiu um aluno permanentemente', `${aluno.nome} (RA ${aluno.ra})`);
         renderizarLixeira();
     }
@@ -3450,8 +3509,9 @@
                     delete importedData.fotos;
                     db = importedData;
 
-                    // Restaura as fotos no IndexedDB (novo formato "fotos"), e também
-                    // migra alunos que ainda tragam foto embutida (backup antigo).
+                    // Restaura as fotos no Supabase Storage (formato "fotos" do
+                    // backup), e também migra alunos que ainda tragam foto
+                    // embutida no próprio registro (formato de backup bem antigo).
                     for (const a of db.alunos) {
                         if (fotosImportadas[a.id]) {
                             await salvarFotoDB(a.id, fotosImportadas[a.id]);
@@ -3464,7 +3524,11 @@
                     }
                     fotosCache = await carregarTodasFotosDB();
 
-                    salvarDB();
+                    const salvouNaNuvem = await salvarDB();
+                    if (!salvouNaNuvem) {
+                        alert('A restauração ficou só neste navegador — não foi possível salvar na nuvem (sem conexão?). Recarregar a página agora perderia o que foi restaurado. Tente restaurar de novo quando a internet estiver estável.');
+                        return;
+                    }
                     registrarLog('Restaurou um backup', `${db.alunos.length} alunos no arquivo restaurado`);
                     listarAlunos();
                     alert("Backup restaurado com sucesso!");
@@ -3947,6 +4011,9 @@
         document.getElementById('alunoSerieDesdeInfo').textContent = '';
         document.getElementById('ajudaSeriePopover').style.display = 'none';
         document.getElementById('btnReiniciarDadosAluno').style.display = 'none';
+        const btnSalvar = document.getElementById('btnSalvarAluno');
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = 'Salvar Aluno';
 
         if (id) {
             const aluno = db.alunos.find(a => a.id === id);
@@ -3968,11 +4035,20 @@
                     document.getElementById('alunoSerieDesdeInfo').textContent = `Também tem frequência/notas registradas em: ${outrasSeries.join(', ')}.`;
                 }
                 modalAlunoBs.show();
+                // Trava o "Salvar" enquanto a foto atual ainda está sendo
+                // buscada no Storage — sem isso, clicar em salvar bem rápido
+                // (antes da foto terminar de carregar) faria o sistema achar
+                // que o aluno não tem foto nenhuma e apagaria a foto de
+                // verdade dele por engano.
+                btnSalvar.disabled = true;
+                btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Carregando foto...';
                 const fotoAtual = await carregarFotoSobDemanda(aluno.id);
                 if (fotoAtual !== PLACEHOLDER_FOTO) {
                     fotoBase64Temp = fotoAtual;
                     document.getElementById('imgPreview').src = fotoAtual;
                 }
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = 'Salvar Aluno';
                 return;
             }
         }
@@ -3992,7 +4068,7 @@
     // em que ele já esteve) — usado quando um cadastro precisa "voltar do
     // zero" (ex: aluno errado, teste, duplicidade). Só admin, e só depois de
     // digitar a palavra de confirmação certinho — não dá pra desfazer depois.
-    function confirmarReiniciarDados() {
+    async function confirmarReiniciarDados() {
         if (!usuarioEhAdmin()) return;
         const id = document.getElementById('alunoId').value;
         const aluno = db.alunos.find(a => a.id === id);
@@ -4006,8 +4082,14 @@
         }
 
         garantirRegistrosPorSerie(aluno);
+        const bucketAnterior = aluno.registrosPorSerie[aluno.serie];
         delete aluno.registrosPorSerie[aluno.serie];
-        salvarDB();
+        const ok = await salvarDB();
+        if (!ok) {
+            alert('Não foi possível reiniciar agora — sem conexão. Tente de novo.');
+            aluno.registrosPorSerie[aluno.serie] = bucketAnterior;
+            return;
+        }
         registrarLog('Reiniciou dados de chamada e notas', `${aluno.nome} — série ${aluno.serie}`);
         alert(`Frequência e notas de "${aluno.nome}" na série ${aluno.serie} foram reiniciadas.`);
         modalAlunoBs.hide();
@@ -4083,8 +4165,8 @@
             novaAvaliacao: { necessario: 'NÃO', observacao: '', campos: [] }
         };
 
-        alunoData.nome = document.getElementById('alunoNome').value;
-        alunoData.ra = document.getElementById('alunoRA').value;
+        alunoData.nome = nomeInformado;
+        alunoData.ra = raInformado;
         alunoData.matricula = document.getElementById('alunoMatricula').value;
         alunoData.status = document.getElementById('alunoStatus').value;
         alunoData.telefone = document.getElementById('alunoTelefone').value;
@@ -4120,7 +4202,12 @@
             delete fotosCache[id];
         }
 
-        salvarDB();
+        const ok = await salvarDB();
+        if (!ok) {
+            alert('Não foi possível salvar — sem conexão. O formulário continua aberto, tente salvar de novo.');
+            if (existingIndex < 0) db.alunos = db.alunos.filter(a => a.id !== id);
+            return;
+        }
         registrarLog(existingIndex >= 0 ? 'Editou o cadastro de um aluno' : 'Cadastrou um novo aluno', `${alunoData.nome} (RA ${alunoData.ra})`);
         modalAlunoBs.hide();
         listarAlunos();
@@ -4131,8 +4218,10 @@
         const aluno = db.alunos.find(a => a.id === id);
         if (!aluno) return;
         if (confirm(`Tem certeza que deseja excluir "${aluno.nome}"? Ele vai sumir de todas as listas do sistema.`)) {
+            const statusAnterior = aluno.status || 'Ativo';
             aluno.status = 'Excluído';
-            salvarDB();
+            const ok = await salvarDB();
+            if (!ok) { alert('Não foi possível excluir agora — sem conexão. Tente de novo.'); aluno.status = statusAnterior; return; }
             registrarLog('Excluiu um aluno', `${aluno.nome} (RA ${aluno.ra})`);
             listarAlunos();
         }
@@ -4205,7 +4294,7 @@
                     <td class="aluno-td-serie">${a.serie}</td>
                     <td class="aluno-td-matricula">${dtMatricula}</td>
                     <td class="aluno-td-status">${statusBadge}</td>
-                    <td class="aluno-td-telefone">${a.telefone}</td>
+                    <td class="aluno-td-telefone">${escapeHtml(a.telefone)}</td>
                     <td class="aluno-td-nee">${neeBadge}</td>
                     <td class="text-center aluno-td-acoes">
                         <button class="btn btn-sm btn-outline-primary me-1 apenas-admin" title="Editar Aluno" onclick="abrirModalAluno('${a.id}')"><i class="fas fa-edit"></i></button>
@@ -4343,10 +4432,12 @@
         const atual = presencasAluno[data] || null;
         const tr = el.closest('tr');
         if (atual === val) {
-            delete presencasAluno[data];
-            const ok = await salvarDB();
+            const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+                const alvo = dadosFrescos.alunos.find(a => a.id === alunoId);
+                if (alvo) delete presencasDoAluno(alvo)[data];
+            });
             mostrarToastSalvo(ok, ok ? 'Marcação removida' : undefined);
-            registrarLog('Removeu marcação de chamada', `${aluno.nome} — ${data.split('-').reverse().join('/')}`);
+            if (ok) registrarLog('Removeu marcação de chamada', `${aluno.nome} — ${data.split('-').reverse().join('/')}`);
             carregarChamadaData();
         } else {
             await salvarChamadaIndividual(alunoId, val);
@@ -4359,17 +4450,23 @@
         }
     }
 
+    // Salva a marcação buscando a versão mais recente do banco na hora (em
+    // vez de subir o que está na memória deste navegador) — evita que duas
+    // pessoas fazendo chamada de turmas diferentes ao mesmo tempo apaguem
+    // por cima as marcações uma da outra.
     async function salvarChamadaIndividual(alunoId, val) {
         const data = document.getElementById('dataChamada').value;
         if (!data) return;
 
         const aluno = db.alunos.find(a => a.id === alunoId);
-        if (aluno) {
-            presencasDoAluno(aluno)[data] = val;
-            const ok = await salvarDB();
-            mostrarToastSalvo(ok);
-            registrarLog('Marcou chamada', `${aluno.nome} — ${val === 'P' ? 'Presente' : 'Ausente'} em ${data.split('-').reverse().join('/')}`);
-        }
+        if (!aluno) return;
+
+        const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+            const alvo = dadosFrescos.alunos.find(a => a.id === alunoId);
+            if (alvo) presencasDoAluno(alvo)[data] = val;
+        });
+        mostrarToastSalvo(ok);
+        if (ok) registrarLog('Marcou chamada', `${aluno.nome} — ${val === 'P' ? 'Presente' : 'Ausente'} em ${data.split('-').reverse().join('/')}`);
     }
 
     function carregarPlantaoData() {
@@ -4426,10 +4523,12 @@
         const jaExiste = (aluno.plantoes || []).some(p => p.materia === materia && p.data === data);
         const tr = el.closest('tr');
         if (statusVal === 'P' && jaExiste) {
-            aluno.plantoes = aluno.plantoes.filter(p => !(p.materia === materia && p.data === data));
-            const ok = await salvarDB();
+            const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+                const alvo = dadosFrescos.alunos.find(a => a.id === alunoId);
+                if (alvo) alvo.plantoes = (alvo.plantoes || []).filter(p => !(p.materia === materia && p.data === data));
+            });
             mostrarToastSalvo(ok, ok ? 'Marcação removida' : undefined);
-            registrarLog('Removeu marcação de plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
+            if (ok) registrarLog('Removeu marcação de plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
             carregarPlantaoData();
         } else {
             await alterarPlantaoIndividual(alunoId, statusVal);
@@ -4440,6 +4539,10 @@
         }
     }
 
+    // Busca a versão mais recente do banco na hora de salvar (em vez de subir
+    // o que está na memória deste navegador) — mesmo motivo da Chamada: evita
+    // que duas pessoas mexendo em turmas/matérias diferentes ao mesmo tempo
+    // apaguem por cima as marcações uma da outra.
     async function alterarPlantaoIndividual(alunoId, statusVal) {
         const data = document.getElementById('dataPlantao').value;
         const materia = document.getElementById('filtroMateriaPlantao').value;
@@ -4449,24 +4552,25 @@
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
 
-        if (!aluno.plantoes) aluno.plantoes = [];
-
-        if (statusVal === 'P') {
-            const jaExiste = aluno.plantoes.some(p => p.materia === materia && p.data === data);
-            if (!jaExiste) {
-                aluno.plantoes.push({ 
-                    id: Date.now().toString() + Math.random().toString().substr(2,4), 
-                    materia, 
-                    data 
-                });
+        const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+            const alvo = dadosFrescos.alunos.find(a => a.id === alunoId);
+            if (!alvo) return;
+            if (!alvo.plantoes) alvo.plantoes = [];
+            if (statusVal === 'P') {
+                const jaExiste = alvo.plantoes.some(p => p.materia === materia && p.data === data);
+                if (!jaExiste) {
+                    alvo.plantoes.push({
+                        id: Date.now().toString() + Math.random().toString().substr(2,4),
+                        materia,
+                        data
+                    });
+                }
+            } else {
+                alvo.plantoes = alvo.plantoes.filter(p => !(p.materia === materia && p.data === data));
             }
-        } else {
-            aluno.plantoes = aluno.plantoes.filter(p => !(p.materia === materia && p.data === data));
-        }
-
-        const ok = await salvarDB();
+        });
         mostrarToastSalvo(ok);
-        registrarLog('Marcou plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
+        if (ok) registrarLog('Marcou plantão', `${aluno.nome} — ${materia} em ${data.split('-').reverse().join('/')}`);
     }
 
     // --- NOTAS & ATIVIDADES ---
@@ -4901,7 +5005,7 @@
         sincronizarRotulos('campos-info-container', 'campos-info-labels');
     }
 
-    function salvarNotasAluno() {
+    async function salvarNotasAluno() {
         const alunoId = document.getElementById('selectAlunoNotas').value;
         const aluno = db.alunos.find(a => a.id === alunoId);
         if (!aluno) return;
@@ -4961,7 +5065,8 @@
             });
         }
 
-        salvarDB();
+        const ok = await salvarDB();
+        if (!ok) { alert('Não foi possível salvar — sem conexão. Tente de novo.'); return; }
         registrarLog('Editou notas e atividades', aluno.nome);
         alert("Notas e Atividades salvas com sucesso!");
     }
@@ -5504,8 +5609,8 @@
 
             const contatoHTML = (numLimpo || temEmail)
                 ? `
-                    ${numLimpo ? `<div class="text-muted fs-6 mt-1"><i class="fas fa-phone me-1"></i>${a.telefone}</div>` : ''}
-                    ${temEmail ? `<div class="text-muted fs-6 mt-1"><i class="fas fa-envelope me-1"></i>${a.email}</div>` : ''}
+                    ${numLimpo ? `<div class="text-muted fs-6 mt-1"><i class="fas fa-phone me-1"></i>${escapeHtml(a.telefone)}</div>` : ''}
+                    ${temEmail ? `<div class="text-muted fs-6 mt-1"><i class="fas fa-envelope me-1"></i>${escapeHtml(a.email)}</div>` : ''}
                 `
                 : `<div class="text-muted fs-6 mt-1"><i class="fas fa-ban me-1"></i>Nenhuma forma de contato inserida</div>`;
 
