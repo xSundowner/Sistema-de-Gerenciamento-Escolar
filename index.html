@@ -1669,7 +1669,6 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Filtrar por Série:</label>
                                     <select id="filtroSerieChamada" class="form-select" onchange="carregarChamadaData()">
-                                        <option value="">Todas as Séries</option>
                                         <option value="1° Ano EM">1° Ano EM</option>
                                         <option value="2° Ano EM">2° Ano EM</option>
                                         <option value="3° Ano EM">3° Ano EM</option>
@@ -1708,7 +1707,6 @@
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Filtrar por Série:</label>
                                     <select id="filtroSeriePlantao" class="form-select" onchange="carregarPlantaoData()">
-                                        <option value="">Todas as Séries</option>
                                         <option value="1° Ano EM">1° Ano EM</option>
                                         <option value="2° Ano EM">2° Ano EM</option>
                                         <option value="3° Ano EM">3° Ano EM</option>
@@ -5365,11 +5363,7 @@
             const notaVal = getNotaVal(n, 'validacao');
             const notaFinal = notaVal !== '' && !isNaN(parseFloat(notaVal))
                 ? parseFloat(notaVal).toFixed(1)
-                : (() => {
-                    const keys = ['av1', 'av2', 'av3', 'av4', 'av5'];
-                    const vals = keys.map(k => parseFloat(getNotaVal(n, k))).filter(v => !isNaN(v));
-                    return vals.length > 0 ? (vals.reduce((a,b)=>a+b, 0) / vals.length).toFixed(1) : '-';
-                })();
+                : '-';
 
             tbodyNotas.innerHTML += `
                 <tr>
@@ -5564,12 +5558,10 @@
 
                 const keys = ['av1', 'av2', 'av3', 'av4', 'av5'];
                 const notasBrutas = keys.map(k => getNotaVal(n, k));
-                const numsVals = notasBrutas.map(v => parseFloat(v)).filter(v => !isNaN(v));
-                const media = numsVals.length > 0 ? (numsVals.reduce((a, b) => a + b, 0) / numsVals.length) : null;
 
                 const valNotaBruta = getNotaVal(n, 'validacao');
                 const valNum = parseFloat(valNotaBruta);
-                const notaFinal = !isNaN(valNum) ? valNum : media;
+                const notaFinal = !isNaN(valNum) ? valNum : null;
 
                 notasAoa.push([
                     m,
