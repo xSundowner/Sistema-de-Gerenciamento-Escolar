@@ -197,6 +197,10 @@
             color: var(--primary-color);
         }
 
+        .card-custom .card-body {
+            padding: 22px 25px;
+        }
+
         .student-photo-preview {
             width: 120px;
             height: 120px;
@@ -305,6 +309,34 @@
         .log-atividade-acao {
             font-size: 13.5px;
             color: #334155;
+        }
+
+        .lixeira-linha {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eef1f5;
+        }
+        .lixeira-linha:last-child { border-bottom: none; }
+
+        .ajuda-serie-icone {
+            cursor: pointer;
+            font-size: 13px;
+            margin-left: 3px;
+            color: #94a3b8;
+        }
+        .ajuda-serie-icone:hover { color: var(--secondary-color); }
+
+        .ajuda-serie-popover {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 12.5px;
+            color: #475569;
         }
 
         .avatar-usuario-wrap {
@@ -1318,6 +1350,18 @@
         .auth-brand{width:76px;height:76px;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;border-radius:22px;color:#fff;background:linear-gradient(145deg,var(--secondary-color),var(--primary-color));box-shadow:0 12px 25px rgba(26,54,93,.28)}
         .auth-brand i{font-size:34px}.auth-title{color:var(--primary-color);font-size:1.45rem;font-weight:750;letter-spacing:-.02em;margin-bottom:5px}.auth-subtitle{color:#64748b;font-size:.9rem;margin-bottom:30px}
         .auth-form-label{display:block;color:#334155;font-size:.84rem;font-weight:700;margin-bottom:8px}.auth-input-wrap{position:relative;margin-bottom:15px}.auth-input-wrap>i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#94a3b8;z-index:2}.auth-input{height:48px;padding-left:43px!important;border:1px solid #dbe3ec!important;border-radius:12px!important;background:#f8fafc!important;box-shadow:none!important;transition:border-color .2s,box-shadow .2s,background .2s}.auth-input:focus{background:#fff!important;border-color:var(--secondary-color)!important;box-shadow:0 0 0 4px rgba(43,108,176,.11)!important}
+        .auth-input-senha { padding-right: 42px !important; }
+        .auth-input-wrap .auth-toggle-senha {
+            position: absolute;
+            left: auto;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .auth-input-wrap .auth-toggle-senha:hover { color: var(--secondary-color); }
         .auth-submit{height:48px;border:0!important;border-radius:12px!important;font-weight:700;letter-spacing:.01em;background:linear-gradient(135deg,var(--secondary-color),var(--primary-color))!important;box-shadow:0 9px 18px rgba(26,54,93,.22);transition:transform .18s ease,box-shadow .18s ease}.auth-submit:hover{transform:translateY(-1px);box-shadow:0 12px 22px rgba(26,54,93,.28)}
         .auth-link{color:var(--secondary-color);font-weight:600;text-decoration:none}.auth-link:hover{text-decoration:underline}.auth-security{margin-top:25px;padding-top:17px;border-top:1px solid #e8edf3;color:#94a3b8;font-size:.75rem;text-align:center}.auth-security i{margin-right:5px}
         #auth-form-criar .form-control,#auth-form-recuperar .form-control{border-radius:12px;min-height:46px}#auth-form-criar .btn,#auth-form-recuperar .btn{border-radius:12px;min-height:46px;font-weight:700}#auth-form-criar .form-label,#auth-form-recuperar .form-label{color:#334155;font-size:.84rem;font-weight:700}
@@ -1364,7 +1408,8 @@
             <label class="auth-form-label">Senha de acesso</label>
             <div class="auth-input-wrap">
                 <i class="fas fa-lock"></i>
-                <input type="password" id="auth-senha-login" class="form-control auth-input" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter') fazerLogin();">
+                <input type="password" id="auth-senha-login" class="form-control auth-input auth-input-senha" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter') fazerLogin();">
+                <i class="fas fa-eye auth-toggle-senha" onclick="alternarVisibilidadeSenha('auth-senha-login', this)" title="Mostrar/ocultar senha"></i>
             </div>
             <div id="auth-login-erro" class="text-danger small mb-3" style="display:none;"></div>
             <button class="btn btn-primary auth-submit w-100 mb-3" type="button" onclick="fazerLogin()"><i class="fas fa-arrow-right-to-bracket me-2"></i> Entrar no sistema</button>
@@ -1413,7 +1458,7 @@
     <div class="row">
         <!-- Sidebar Navigation -->
         <nav class="col-md-3 col-lg-2 sidebar">
-            <div class="text-center mb-4">
+            <div class="text-center mb-4" onclick="registrarCliqueLogoLixeira()" style="cursor:default;">
                 <i class="fas fa-graduation-cap fa-2x text-white mb-2"></i>
                 <h5 class="text-white">Sistema de Gestão Escolar</h5>
             </div>
@@ -1619,7 +1664,7 @@
                             <div class="row g-3 align-items-center">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Data da Chamada (Segunda a Sexta):</label>
-                                    <input type="date" id="dataChamada" class="form-control" onchange="carregarChamadaData()">
+                                    <input type="date" id="dataChamada" class="form-control" onchange="bloquearDataFutura(this); carregarChamadaData();">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Filtrar por Série:</label>
@@ -1658,7 +1703,7 @@
                             <div class="row g-3 align-items-center">
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Data do Plantão:</label>
-                                    <input type="date" id="dataPlantao" class="form-control" onchange="carregarPlantaoData()">
+                                    <input type="date" id="dataPlantao" class="form-control" onchange="bloquearDataFutura(this); carregarPlantaoData();">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label fw-bold">Filtrar por Série:</label>
@@ -1778,7 +1823,7 @@
                     </div>
                 </div>
 
-                <div id="aviso-bloqueio-notas" class="alert alert-warning d-flex align-items-center gap-2 mb-4" style="display:none;">
+                <div id="aviso-bloqueio-notas" class="alert alert-warning align-items-center gap-2 mb-4" style="display:none;">
                     <i class="fas fa-lock"></i>
                     <span id="aviso-bloqueio-notas-texto"></span>
                 </div>
@@ -1995,8 +2040,13 @@
                     </div>
                 </div>
 
+                <div class="card-custom text-center text-muted py-5" id="card-relatorio-vazio">
+                    <i class="fas fa-file-invoice mb-3 d-block" style="font-size:32px;"></i>
+                    Selecione um aluno acima para visualizar o relatório.
+                </div>
+
                 <!-- Modelo Impresso em PDF -->
-                <div class="card-custom p-0">
+                <div class="card-custom p-0" id="card-relatorio-pdf" style="display:none;">
                     <div id="pdf-template">
                         <div class="pdf-header">
                             <div class="pdf-header-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -2262,6 +2312,23 @@
     </div>
 </div>
 
+<!-- MODAL LIXEIRA (acesso oculto, sem link/botão em nenhum menu) -->
+<div class="modal fade" id="modalLixeira" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-trash-can me-2 text-danger"></i>Lixeira</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="lixeira-corpo">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL CADASTRAR / EDITAR ALUNO -->
 <div class="modal fade" id="modalAluno" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -2292,11 +2359,11 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-8">
                                     <label class="form-label">Nome Completo *</label>
-                                    <input type="text" id="alunoNome" class="form-control" required>
+                                    <input type="text" id="alunoNome" class="form-control" required oninput="this.value = this.value.replace(/[^\p{L}\s'-]/gu, '')">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">RA *</label>
-                                    <input type="text" id="alunoRA" class="form-control" required>
+                                    <input type="text" id="alunoRA" class="form-control" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Data de Nascimento *</label>
@@ -2353,22 +2420,28 @@
                                     <input type="date" id="alunoMatricula" class="form-control" required>
                                 </div>
                                 <div class="col-md-8">
-                                    <label class="form-label">Série / Etapa *</label>
-                                    <select id="alunoSerie" class="form-select" required onchange="avisarTrocaSerie()">
+                                    <label class="form-label">
+                                        Série / Etapa *
+                                        <i class="fas fa-circle-question text-muted ajuda-serie-icone" onclick="toggleAjudaSerie(event)" title="Como funciona"></i>
+                                    </label>
+                                    <select id="alunoSerie" class="form-select" required>
                                         <option value="1° Ano EM">1° Ano EM</option>
                                         <option value="2° Ano EM">2° Ano EM</option>
                                         <option value="3° Ano EM">3° Ano EM</option>
                                     </select>
                                     <small class="text-muted d-block mt-1" id="alunoSerieDesdeInfo"></small>
-                                    <small class="text-warning d-block mt-1" id="alunoSerieAvisoTroca" style="display:none;">
-                                        <i class="fas fa-triangle-exclamation me-1"></i>Frequência e notas ficam guardadas separadas por série. Se essa for a primeira vez do aluno nessa série, a tela vai começar em branco; se ele já esteve nela antes, os dados voltam a aparecer como estavam.
-                                    </small>
+                                    <div class="ajuda-serie-popover" id="ajudaSeriePopover" style="display:none;">
+                                        Frequência e notas ficam guardadas separadas por série. Se essa for a primeira vez do aluno nessa série, a tela vai começar em branco; se ele já esteve nela antes, os dados voltam a aparecer como estavam.
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger me-auto apenas-admin" id="btnReiniciarDadosAluno" style="display:none;" onclick="confirmarReiniciarDados()">
+                        <i class="fas fa-rotate-left me-1"></i>Reiniciar Dados
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar Aluno</button>
                 </div>
@@ -2670,6 +2743,27 @@
         mostrarTelaLogin();
     }
 
+    // Mostra/oculta a senha digitada, trocando o tipo do campo e o ícone.
+    function alternarVisibilidadeSenha(inputId, icone) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const vaiMostrar = input.type === 'password';
+        input.type = vaiMostrar ? 'text' : 'password';
+        icone.classList.toggle('fa-eye', !vaiMostrar);
+        icone.classList.toggle('fa-eye-slash', vaiMostrar);
+    }
+
+    // Se o campo de data tiver uma data futura (digitada na mão, já que o
+    // seletor nativo já bloqueia isso na maioria dos navegadores), volta pra
+    // hoje e avisa. Usado na Chamada e no Plantão.
+    function bloquearDataFutura(input) {
+        const hojeISO = new Date().toISOString().slice(0, 10);
+        if (input.value && input.value > hojeISO) {
+            input.value = hojeISO;
+            alert('Não é possível selecionar uma data futura. A data foi ajustada para hoje.');
+        }
+    }
+
     async function fazerLogin() {
         const email = document.getElementById('auth-email-login').value.trim();
         const senha = document.getElementById('auth-senha-login').value;
@@ -2830,8 +2924,11 @@
         atualizarIndicadorSync('ok');
         modalAlunoBs = new bootstrap.Modal(document.getElementById('modalAluno'));
         document.getElementById('imgPreview').src = PLACEHOLDER_FOTO;
+        const hojeISO = new Date().toISOString().slice(0, 10);
+        document.getElementById('dataChamada').max = hojeISO;
         document.getElementById('dataChamada').valueAsDate = new Date();
         if (document.getElementById('dataPlantao')) {
+            document.getElementById('dataPlantao').max = hojeISO;
             document.getElementById('dataPlantao').valueAsDate = new Date();
         }
         
@@ -2947,15 +3044,19 @@
                     ${u.id === usuarioAtual.id
                         ? '<span class="text-muted small">—</span>'
                         : `<div class="btn-group btn-group-sm">
-                             <button class="btn btn-outline-secondary" ${ehAdmin ? 'disabled' : ''} title="${ehAdmin ? 'Não é possível rebaixar um administrador' : 'Tornar Admin'}" onclick="alterarPapelUsuario('${u.id}', '${ehAdmin ? 'professor' : 'admin'}')">
-                               <i class="fas fa-arrows-rotate me-1"></i>${ehAdmin ? 'Professor' : 'Admin'}
+                             ${!ehAdmin ? `
+                             <button class="btn btn-outline-secondary" title="Tornar Admin" onclick="alterarPapelUsuario('${u.id}', 'admin')">
+                               <i class="fas fa-arrows-rotate me-1"></i>Admin
                              </button>
+                             ` : ''}
                              <button class="btn btn-outline-primary" title="Editar e-mail" onclick="editarEmailUsuario('${u.id}', '${emailEscapado}')">
                                <i class="fas fa-envelope"></i>
                              </button>
-                             <button class="btn btn-outline-danger" ${ehAdmin ? 'disabled' : ''} title="${ehAdmin ? 'Não é possível excluir um administrador' : 'Excluir usuário'}" onclick="excluirUsuario('${u.id}', '${emailEscapado}')">
+                             ${!ehAdmin ? `
+                             <button class="btn btn-outline-danger" title="Excluir usuário" onclick="excluirUsuario('${u.id}', '${emailEscapado}')">
                                <i class="fas fa-trash"></i>
                              </button>
+                             ` : ''}
                            </div>`
                     }
                 </td>
@@ -3225,6 +3326,82 @@
                 </div>
             `;
         }).join('');
+    }
+
+    // --- LIXEIRA (acesso "escondido": 5 cliques seguidos no logo do sistema) ---
+    // Não tem botão, link ou menu visível em lugar nenhum — de propósito.
+    // Alunos excluídos (status 'Excluído') ficam invisíveis em toda a tela
+    // normal do sistema, mas continuam guardados; é aqui que dá pra
+    // restaurar um excluído por engano, ou apagar de vez quando for
+    // realmente definitivo.
+    let cliquesLogoLixeira = [];
+    function registrarCliqueLogoLixeira() {
+        if (!usuarioEhAdmin()) return;
+        const agora = Date.now();
+        cliquesLogoLixeira = cliquesLogoLixeira.filter(t => agora - t < 2500);
+        cliquesLogoLixeira.push(agora);
+        if (cliquesLogoLixeira.length >= 5) {
+            cliquesLogoLixeira = [];
+            abrirLixeira();
+        }
+    }
+
+    function abrirLixeira() {
+        if (!usuarioEhAdmin()) return;
+        renderizarLixeira();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalLixeira')).show();
+    }
+
+    function renderizarLixeira() {
+        const corpo = document.getElementById('lixeira-corpo');
+        const excluidos = db.alunos
+            .filter(a => (a.status || 'Ativo') === 'Excluído')
+            .sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
+
+        if (excluidos.length === 0) {
+            corpo.innerHTML = '<div class="text-muted text-center py-4">A lixeira está vazia.</div>';
+            return;
+        }
+
+        corpo.innerHTML = excluidos.map(a => `
+            <div class="lixeira-linha">
+                <div>
+                    <div class="fw-semibold">${a.nome}</div>
+                    <div class="text-muted small">RA ${a.ra} — ${a.serie}</div>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-success" onclick="restaurarAluno('${a.id}')"><i class="fas fa-rotate-left me-1"></i>Restaurar</button>
+                    <button class="btn btn-outline-danger" onclick="excluirAlunoPermanentemente('${a.id}')"><i class="fas fa-trash me-1"></i>Excluir de vez</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function restaurarAluno(id) {
+        const aluno = db.alunos.find(a => a.id === id);
+        if (!aluno) return;
+        aluno.status = 'Ativo';
+        salvarDB();
+        registrarLog('Restaurou um aluno excluído', `${aluno.nome} (RA ${aluno.ra})`);
+        renderizarLixeira();
+        listarAlunos();
+    }
+
+    async function excluirAlunoPermanentemente(id) {
+        const aluno = db.alunos.find(a => a.id === id);
+        if (!aluno) return;
+        const digitado = prompt(`Isso apaga "${aluno.nome}" de vez — cadastro, frequência, notas, foto, tudo. Depois disso não tem mais lixeira, não dá pra desfazer.\n\nPra confirmar, digite EXCLUIR (tudo em maiúsculo):`);
+        if (digitado === null) return;
+        if (digitado !== 'EXCLUIR') {
+            alert('Não digitou "EXCLUIR" certinho — nada foi apagado.');
+            return;
+        }
+        db.alunos = db.alunos.filter(a => a.id !== id);
+        await excluirFotoDB(id);
+        delete fotosCache[id];
+        salvarDB();
+        registrarLog('Excluiu um aluno permanentemente', `${aluno.nome} (RA ${aluno.ra})`);
+        renderizarLixeira();
     }
 
     async function exportarBackup() {
@@ -3609,9 +3786,11 @@
         selectRelatorio.innerHTML = '<option value="">-- Escolha um Aluno --</option>';
         if (selectFrequencia) selectFrequencia.innerHTML = '<option value="">-- Escolha um Aluno --</option>';
 
-        const alunosOrdenados = db.alunos.slice().sort((a, b) =>
-            (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' })
-        );
+        const alunosOrdenados = db.alunos
+            .filter(a => (a.status || 'Ativo') !== 'Excluído')
+            .sort((a, b) =>
+                (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' })
+            );
 
         alunosOrdenados.forEach(a => {
             const opt1 = new Option(`${a.nome} (${a.serie}) - RA: ${a.ra}`, a.id);
@@ -3633,7 +3812,7 @@
         const selectTurma = document.getElementById('selectTurmaRelatorioLote');
         if (selectTurma) {
             const valTurma = selectTurma.value;
-            const turmas = [...new Set(db.alunos.map(a => a.serie).filter(Boolean))].sort((a,b) =>
+            const turmas = [...new Set(alunosOrdenados.map(a => a.serie).filter(Boolean))].sort((a,b) =>
                 a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
             );
             selectTurma.innerHTML = '<option value="">-- Escolha uma turma --</option>';
@@ -3755,20 +3934,19 @@
     }
 
     // --- CRUD ALUNOS ---
-    let alunoSerieOriginalEdicao = null;
-
     async function abrirModalAluno(id = null) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem criar ou editar o cadastro de um aluno.'); return; }
         document.getElementById('formAluno').reset();
         document.getElementById('alunoId').value = '';
         document.getElementById('alunoStatus').value = 'Ativo';
+        document.getElementById('alunoMatricula').max = new Date().toISOString().slice(0, 10);
         document.getElementById('alunoMatricula').valueAsDate = new Date();
         fotoBase64Temp = '';
         document.getElementById('imgPreview').src = PLACEHOLDER_FOTO;
         document.getElementById('modalAlunoTitle').innerText = 'Cadastrar Novo Aluno';
-        alunoSerieOriginalEdicao = null;
         document.getElementById('alunoSerieDesdeInfo').textContent = '';
-        document.getElementById('alunoSerieAvisoTroca').style.display = 'none';
+        document.getElementById('ajudaSeriePopover').style.display = 'none';
+        document.getElementById('btnReiniciarDadosAluno').style.display = 'none';
 
         if (id) {
             const aluno = db.alunos.find(a => a.id === id);
@@ -3784,7 +3962,7 @@
                 document.getElementById('alunoSerie').value = aluno.serie;
                 document.getElementById('alunoNEE').value = aluno.nee;
                 document.getElementById('modalAlunoTitle').innerText = 'Editar Aluno';
-                alunoSerieOriginalEdicao = aluno.serie;
+                if (usuarioEhAdmin()) document.getElementById('btnReiniciarDadosAluno').style.display = 'inline-block';
                 const outrasSeries = seriesAnterioresDoAluno(aluno);
                 if (outrasSeries.length > 0) {
                     document.getElementById('alunoSerieDesdeInfo').textContent = `Também tem frequência/notas registradas em: ${outrasSeries.join(', ')}.`;
@@ -3801,13 +3979,39 @@
         modalAlunoBs.show();
     }
 
-    // Mostra o aviso de "a frequência antiga vira histórico" só quando a
-    // série escolhida no formulário é diferente da que o aluno tinha.
-    function avisarTrocaSerie() {
-        const aviso = document.getElementById('alunoSerieAvisoTroca');
-        if (!aviso) return;
-        const novaSerie = document.getElementById('alunoSerie').value;
-        aviso.style.display = (alunoSerieOriginalEdicao && novaSerie !== alunoSerieOriginalEdicao) ? 'block' : 'none';
+    // Mostra/esconde o texto explicando como frequência e notas ficam
+    // separadas por série, quando a pessoa clica no ícone de ajuda.
+    function toggleAjudaSerie(event) {
+        event.preventDefault();
+        const el = document.getElementById('ajudaSeriePopover');
+        if (!el) return;
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Apaga TODA a frequência e TODAS as notas do aluno (de todas as séries
+    // em que ele já esteve) — usado quando um cadastro precisa "voltar do
+    // zero" (ex: aluno errado, teste, duplicidade). Só admin, e só depois de
+    // digitar a palavra de confirmação certinho — não dá pra desfazer depois.
+    function confirmarReiniciarDados() {
+        if (!usuarioEhAdmin()) return;
+        const id = document.getElementById('alunoId').value;
+        const aluno = db.alunos.find(a => a.id === id);
+        if (!aluno) return;
+
+        const digitado = prompt(`Isso vai apagar toda a frequência e todas as notas de "${aluno.nome}" na série atual (${aluno.serie}) — não dá pra desfazer depois. Dados de outras séries em que ele já esteve não são afetados.\n\nPra confirmar, digite REINICIAR (tudo em maiúsculo):`);
+        if (digitado === null) return; // cancelou
+        if (digitado !== 'REINICIAR') {
+            alert('Não digitou "REINICIAR" certinho — nada foi apagado.');
+            return;
+        }
+
+        garantirRegistrosPorSerie(aluno);
+        delete aluno.registrosPorSerie[aluno.serie];
+        salvarDB();
+        registrarLog('Reiniciou dados de chamada e notas', `${aluno.nome} — série ${aluno.serie}`);
+        alert(`Frequência e notas de "${aluno.nome}" na série ${aluno.serie} foram reiniciadas.`);
+        modalAlunoBs.hide();
+        listarAlunos();
     }
 
     async function previewFoto(event) {
@@ -3836,10 +4040,37 @@
         const id = document.getElementById('alunoId').value || Date.now().toString();
         const existingIndex = db.alunos.findIndex(a => a.id === id);
 
+        const nomeInformado = document.getElementById('alunoNome').value.trim();
+        if (/[^\p{L}\s'-]/u.test(nomeInformado)) {
+            alert('O nome não pode conter números nem sinais de pontuação (só letras, espaço, apóstrofo e hífen).');
+            return;
+        }
+
+        const matriculaInformada = document.getElementById('alunoMatricula').value;
+        if (matriculaInformada && matriculaInformada > new Date().toISOString().slice(0, 10)) {
+            alert('A data de matrícula não pode ser uma data futura.');
+            return;
+        }
+
         const raInformado = document.getElementById('alunoRA').value.trim();
-        const raDuplicado = db.alunos.some(a => a.id !== id && (a.ra || '').trim().toLowerCase() === raInformado.toLowerCase());
-        if (raDuplicado) {
-            alert('Já existe um aluno cadastrado com este RA (' + raInformado + '). Verifique o cadastro antes de salvar.');
+        if (raInformado !== '' && /[^0-9]/.test(raInformado)) {
+            alert('O RA deve conter só números.');
+            return;
+        }
+        const alunoComMesmoRA = db.alunos.find(a => a.id !== id && (a.ra || '').trim().toLowerCase() === raInformado.toLowerCase());
+        if (alunoComMesmoRA) {
+            if ((alunoComMesmoRA.status || 'Ativo') === 'Excluído') {
+                alert(`Este RA (${raInformado}) já pertenceu a um aluno que foi excluído do sistema. Não é possível reutilizar o RA por aqui — se for a mesma pessoa, ela precisa ser restaurada em vez de recadastrada.`);
+            } else {
+                alert('Já existe um aluno cadastrado com este RA (' + raInformado + '). Verifique o cadastro antes de salvar.');
+            }
+            return;
+        }
+
+        const telefoneInformado = document.getElementById('alunoTelefone').value.trim();
+        const digitosTelefone = telefoneInformado.replace(/\D/g, '');
+        if (telefoneInformado !== '' && (digitosTelefone.length < 10 || digitosTelefone.length > 11)) {
+            alert('Telefone inválido. Digite o DDD + número (10 ou 11 dígitos), por exemplo: 11999999999.');
             return;
         }
 
@@ -3897,13 +4128,12 @@
 
     async function excluirAluno(id) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem excluir um aluno.'); return; }
-        if (confirm("Tem certeza que deseja excluir este aluno? Todos os registros serão perdidos.")) {
-            const aluno = db.alunos.find(a => a.id === id);
-            db.alunos = db.alunos.filter(a => a.id !== id);
-            await excluirFotoDB(id);
-            delete fotosCache[id];
+        const aluno = db.alunos.find(a => a.id === id);
+        if (!aluno) return;
+        if (confirm(`Tem certeza que deseja excluir "${aluno.nome}"? Ele vai sumir de todas as listas do sistema.`)) {
+            aluno.status = 'Excluído';
             salvarDB();
-            registrarLog('Excluiu um aluno', aluno ? `${aluno.nome} (RA ${aluno.ra})` : id);
+            registrarLog('Excluiu um aluno', `${aluno.nome} (RA ${aluno.ra})`);
             listarAlunos();
         }
     }
@@ -3913,6 +4143,8 @@
         const statusFiltro = document.getElementById('filtroStatusAluno').value;
 
         return db.alunos.filter(a => {
+            if ((a.status || 'Ativo') === 'Excluído') return false;
+
             const matchTexto = a.nome.toLowerCase().includes(termo) || 
                                a.ra.toLowerCase().includes(termo) || 
                                a.serie.toLowerCase().includes(termo);
@@ -4757,10 +4989,24 @@
 
     async function renderizarRelatorio() {
         const alunoId = document.getElementById('selectAlunoRelatorio').value;
-        if (!alunoId) return;
+        const cardPdf = document.getElementById('card-relatorio-pdf');
+        const cardVazio = document.getElementById('card-relatorio-vazio');
+
+        if (!alunoId) {
+            cardPdf.style.display = 'none';
+            cardVazio.style.display = 'block';
+            return;
+        }
 
         const aluno = db.alunos.find(a => a.id === alunoId);
-        if (!aluno) return;
+        if (!aluno) {
+            cardPdf.style.display = 'none';
+            cardVazio.style.display = 'block';
+            return;
+        }
+
+        cardVazio.style.display = 'none';
+        cardPdf.style.display = 'block';
 
         document.getElementById('pdf-nome-escola').innerText = (db.config && db.config.nomeEscola) ? db.config.nomeEscola : NOME_ESCOLA_PADRAO;
         document.getElementById('pdf-nome').innerText = aluno.nome;
@@ -5227,6 +5473,8 @@
         grid.innerHTML = '';
 
         const filtrados = db.alunos.filter(a => {
+            if ((a.status || 'Ativo') === 'Excluído') return false;
+
             const matchTexto = a.nome.toLowerCase().includes(termo) || 
                                a.ra.toLowerCase().includes(termo) ||
                                a.serie.toLowerCase().includes(termo);
