@@ -2317,13 +2317,44 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-trash-can me-2 text-danger"></i>Lixeira</h5>
+                <h5 class="modal-title"><i class="fas fa-trash-can me-2 text-danger"></i>Lixeira <span id="lixeiraContador" class="badge rounded-pill bg-light text-secondary fw-normal ms-1"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="lixeira-corpo">
+            <div class="modal-body">
+                <div class="input-group input-group-sm mb-3">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="lixeiraBusca" class="form-control" placeholder="Buscar por nome ou RA..." onkeyup="renderizarListaLixeira()">
+                </div>
+                <div id="lixeira-corpo"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="baixarEexcluirTodosLixeira()"><i class="fas fa-file-export me-1"></i>Baixar dados e excluir todos</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EXCLUIR ALUNO (motivo da exclusão) -->
+<div class="modal fade" id="modalExcluirAluno" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-trash-can me-2 text-danger"></i>Excluir aluno</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="excluirAlunoNomeTexto" class="mb-3"></p>
+                <label class="form-label fw-bold">Motivo da exclusão *</label>
+                <select id="excluirAlunoMotivo" class="form-select">
+                    <option value="Manual">Manual (decisão administrativa)</option>
+                    <option value="Inatividade">Inatividade prolongada</option>
+                </select>
+                <small class="text-muted d-block mt-2">O aluno some de todas as telas do sistema, mas fica guardado na Lixeira e pode ser restaurado depois.</small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarExclusaoAluno()">Excluir</button>
             </div>
         </div>
     </div>
@@ -3233,6 +3264,32 @@
         if (!db || !Array.isArray(db.alunos)) db = { alunos: [] };
         if (!db.config) db.config = {};
         if (!db.config.nomeEscola) db.config.nomeEscola = NOME_ESCOLA_PADRAO;
+
+        await migrarExcluidosAntigosSeNecessario();
+    }
+
+    // Compatibilidade com o modelo antigo: antes, "excluir" só marcava
+    // status='Excluído' e o aluno continuava dentro do banco principal
+    // (só escondido das telas). Se sobrar algum aluno assim, move pra
+    // tabela separada alunos_excluidos automaticamente, uma vez só.
+    async function migrarExcluidosAntigosSeNecessario() {
+        const antigos = db.alunos.filter(a => (a.status || 'Ativo') === 'Excluído');
+        if (antigos.length === 0) return;
+
+        for (const aluno of antigos) {
+            try {
+                await supabaseClient.from('alunos_excluidos').upsert({
+                    id: aluno.id,
+                    dados: aluno,
+                    motivo: 'Manual',
+                    excluido_por: usuarioAtual ? usuarioAtual.email : null
+                });
+            } catch (e) {
+                console.warn('Não foi possível migrar aluno excluído (modelo antigo) para a lixeira.', aluno.id, e);
+            }
+        }
+        db.alunos = db.alunos.filter(a => (a.status || 'Ativo') !== 'Excluído');
+        await salvarDB();
     }
 
     async function salvarNomeEscola() {
@@ -3386,10 +3443,11 @@
 
     // --- LIXEIRA (acesso "escondido": 5 cliques seguidos no logo do sistema) ---
     // Não tem botão, link ou menu visível em lugar nenhum — de propósito.
-    // Alunos excluídos (status 'Excluído') ficam invisíveis em toda a tela
-    // normal do sistema, mas continuam guardados; é aqui que dá pra
-    // restaurar um excluído por engano, ou apagar de vez quando for
-    // realmente definitivo.
+    // Alunos excluídos ficam guardados numa TABELA SEPARADA (alunos_excluidos)
+    // no Supabase — fora do banco principal que carrega no login — então não
+    // pesam no carregamento normal do sistema. Só é lida quando alguém abre
+    // a Lixeira. É aqui que dá pra restaurar um excluído por engano, ou
+    // apagar de vez quando for realmente definitivo.
     let cliquesLogoLixeira = [];
     function registrarCliqueLogoLixeira() {
         if (!usuarioEhAdmin()) return;
@@ -3404,63 +3462,181 @@
 
     function abrirLixeira() {
         if (!usuarioEhAdmin()) return;
-        renderizarLixeira();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalLixeira')).show();
+        document.getElementById('lixeiraBusca').value = '';
+        renderizarLixeira();
     }
 
-    function renderizarLixeira() {
-        const corpo = document.getElementById('lixeira-corpo');
-        const excluidos = db.alunos
-            .filter(a => (a.status || 'Ativo') === 'Excluído')
-            .sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
+    let lixeiraCache = [];
 
-        if (excluidos.length === 0) {
+    async function renderizarLixeira() {
+        const corpo = document.getElementById('lixeira-corpo');
+        corpo.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i>Carregando...</div>';
+
+        const { data, error } = await supabaseClient
+            .from('alunos_excluidos')
+            .select('id, dados, motivo, excluido_por, excluido_em')
+            .order('excluido_em', { ascending: false });
+
+        if (error) {
+            corpo.innerHTML = `<div class="text-danger text-center py-4">Não foi possível carregar a lixeira: ${error.message}</div>`;
+            return;
+        }
+
+        lixeiraCache = data || [];
+        renderizarListaLixeira();
+    }
+
+    function renderizarListaLixeira() {
+        const corpo = document.getElementById('lixeira-corpo');
+        const termo = (document.getElementById('lixeiraBusca')?.value || '').trim().toLowerCase();
+
+        const contador = document.getElementById('lixeiraContador');
+        if (contador) contador.textContent = lixeiraCache.length;
+
+        if (lixeiraCache.length === 0) {
             corpo.innerHTML = '<div class="text-muted text-center py-4">A lixeira está vazia.</div>';
             return;
         }
 
-        corpo.innerHTML = excluidos.map(a => `
+        const filtrados = lixeiraCache.filter(l =>
+            !termo || (l.dados.nome || '').toLowerCase().includes(termo) || (l.dados.ra || '').toLowerCase().includes(termo)
+        );
+
+        if (filtrados.length === 0) {
+            corpo.innerHTML = '<div class="text-muted text-center py-4">Nenhum aluno encontrado para essa busca.</div>';
+            return;
+        }
+
+        corpo.innerHTML = filtrados.map(l => {
+            const a = l.dados;
+            const dt = l.excluido_em ? new Date(l.excluido_em).toLocaleDateString('pt-BR') : '';
+            return `
             <div class="lixeira-linha">
                 <div>
-                    <div class="fw-semibold">${a.nome}</div>
-                    <div class="text-muted small">RA ${a.ra} — ${a.serie}</div>
+                    <div class="fw-semibold">${escapeHtml(a.nome)}</div>
+                    <div class="text-muted small">RA ${escapeHtml(a.ra)} — ${escapeHtml(a.serie)} · excluído em ${dt} (${escapeHtml(l.motivo || 'Manual')})</div>
                 </div>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-success" onclick="restaurarAluno('${a.id}')"><i class="fas fa-rotate-left me-1"></i>Restaurar</button>
-                    <button class="btn btn-outline-danger" onclick="excluirAlunoPermanentemente('${a.id}')"><i class="fas fa-trash me-1"></i>Excluir de vez</button>
+                    <button class="btn btn-outline-success" onclick="restaurarAluno('${l.id}')"><i class="fas fa-rotate-left me-1"></i>Restaurar</button>
+                    <button class="btn btn-outline-danger" onclick="excluirAlunoPermanentemente('${l.id}')"><i class="fas fa-trash me-1"></i>Excluir de vez</button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     async function restaurarAluno(id) {
-        const aluno = db.alunos.find(a => a.id === id);
-        if (!aluno) return;
+        const item = lixeiraCache.find(l => l.id === id);
+        if (!item) return;
+        const aluno = item.dados;
         aluno.status = 'Ativo';
-        const ok = await salvarDB();
-        if (!ok) { alert('Não foi possível restaurar agora — sem conexão. Tente de novo.'); aluno.status = 'Excluído'; return; }
+
+        const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+            if (!dadosFrescos.alunos.some(a => a.id === id)) {
+                dadosFrescos.alunos.push(aluno);
+            }
+        });
+        if (!ok) { alert('Não foi possível restaurar agora — sem conexão. Tente de novo.'); return; }
+
+        try {
+            const { error } = await supabaseClient.from('alunos_excluidos').delete().eq('id', id);
+            if (error) throw error;
+        } catch (e) {
+            console.error('Erro ao remover da lixeira depois de restaurar.', e);
+        }
+
         registrarLog('Restaurou um aluno excluído', `${aluno.nome} (RA ${aluno.ra})`);
-        renderizarLixeira();
+        await renderizarLixeira();
         listarAlunos();
     }
 
     async function excluirAlunoPermanentemente(id) {
-        const aluno = db.alunos.find(a => a.id === id);
-        if (!aluno) return;
+        const item = lixeiraCache.find(l => l.id === id);
+        if (!item) return;
+        const aluno = item.dados;
         const digitado = prompt(`Isso apaga "${aluno.nome}" de vez — cadastro, frequência, notas, foto, tudo. Depois disso não tem mais lixeira, não dá pra desfazer.\n\nPra confirmar, digite EXCLUIR (tudo em maiúsculo):`);
         if (digitado === null) return;
         if (digitado !== 'EXCLUIR') {
             alert('Não digitou "EXCLUIR" certinho — nada foi apagado.');
             return;
         }
-        const alunosAntes = db.alunos;
-        db.alunos = db.alunos.filter(a => a.id !== id);
-        const ok = await salvarDB();
-        if (!ok) { alert('Não foi possível excluir agora — sem conexão. Tente de novo.'); db.alunos = alunosAntes; return; }
+
+        try {
+            const { error } = await supabaseClient.from('alunos_excluidos').delete().eq('id', id);
+            if (error) throw error;
+        } catch (e) {
+            alert('Não foi possível excluir agora — sem conexão. Tente de novo.');
+            return;
+        }
         await excluirFotoDB(id);
         delete fotosCache[id];
         registrarLog('Excluiu um aluno permanentemente', `${aluno.nome} (RA ${aluno.ra})`);
-        renderizarLixeira();
+        await renderizarLixeira();
+    }
+
+    // Baixa tudo que está na lixeira (JSON + Excel) e, só depois de
+    // confirmar por escrito, apaga TODOS de vez — cadastro, frequência,
+    // notas e fotos de cada um. É a "faxina completa" da lixeira.
+    async function baixarEexcluirTodosLixeira() {
+        if (lixeiraCache.length === 0) { alert('A lixeira está vazia.'); return; }
+
+        const dataHoje = new Date().toISOString().slice(0, 10);
+        const dadosParaExportar = lixeiraCache.map(l => ({
+            ...l.dados,
+            motivo_exclusao: l.motivo,
+            excluido_por: l.excluido_por,
+            excluido_em: l.excluido_em
+        }));
+
+        // 1) JSON com o registro completo de cada aluno
+        const blobJson = new Blob([JSON.stringify(dadosParaExportar, null, 2)], { type: 'application/json' });
+        const urlJson = URL.createObjectURL(blobJson);
+        const linkJson = document.createElement('a');
+        linkJson.href = urlJson;
+        linkJson.download = `lixeira_alunos_${dataHoje}.json`;
+        linkJson.click();
+        URL.revokeObjectURL(urlJson);
+
+        // 2) Excel com um resumo (cadastro + motivo/data da exclusão)
+        const linhasExcel = dadosParaExportar.map(a => ({
+            "RA": a.ra,
+            "Nome": a.nome,
+            "Série": a.serie,
+            "Status Anterior": a.status,
+            "Telefone": a.telefone || '',
+            "E-mail": a.email || '',
+            "Motivo da Exclusão": a.motivo_exclusao,
+            "Excluído por": a.excluido_por || '',
+            "Excluído em": a.excluido_em ? new Date(a.excluido_em).toLocaleString('pt-BR') : ''
+        }));
+        const worksheet = XLSX.utils.json_to_sheet(linhasExcel);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Lixeira");
+        XLSX.writeFile(workbook, `lixeira_alunos_${dataHoje}.xlsx`);
+
+        // 3) Confirmação por escrito antes de apagar tudo de vez
+        const digitado = prompt(`Os arquivos JSON e Excel foram baixados. Agora isso vai apagar de vez TODOS os ${lixeiraCache.length} alunos da lixeira — cadastro, frequência, notas e fotos de cada um. Não dá pra desfazer.\n\nPra confirmar, digite EXCLUIR TODOS:`);
+        if (digitado === null) return;
+        if (digitado !== 'EXCLUIR TODOS') {
+            alert('Não digitou "EXCLUIR TODOS" certinho — nada foi apagado (mas os arquivos já foram baixados).');
+            return;
+        }
+
+        const ids = lixeiraCache.map(l => l.id);
+        try {
+            const { error } = await supabaseClient.from('alunos_excluidos').delete().in('id', ids);
+            if (error) throw error;
+        } catch (e) {
+            alert('Não foi possível excluir agora — sem conexão. Tente de novo (os arquivos já foram baixados).');
+            return;
+        }
+        for (const id of ids) {
+            await excluirFotoDB(id);
+            delete fotosCache[id];
+        }
+        registrarLog('Excluiu todos os alunos da lixeira permanentemente', `${ids.length} alunos`);
+        await renderizarLixeira();
     }
 
     async function exportarBackup() {
@@ -4213,18 +4389,53 @@
         listarAlunos();
     }
 
-    async function excluirAluno(id) {
+    let alunoIdParaExcluir = null;
+
+    function excluirAluno(id) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem excluir um aluno.'); return; }
         const aluno = db.alunos.find(a => a.id === id);
         if (!aluno) return;
-        if (confirm(`Tem certeza que deseja excluir "${aluno.nome}"? Ele vai sumir de todas as listas do sistema.`)) {
-            const statusAnterior = aluno.status || 'Ativo';
-            aluno.status = 'Excluído';
-            const ok = await salvarDB();
-            if (!ok) { alert('Não foi possível excluir agora — sem conexão. Tente de novo.'); aluno.status = statusAnterior; return; }
-            registrarLog('Excluiu um aluno', `${aluno.nome} (RA ${aluno.ra})`);
-            listarAlunos();
+        alunoIdParaExcluir = id;
+        document.getElementById('excluirAlunoNomeTexto').innerHTML = `Tem certeza que deseja excluir <strong>${escapeHtml(aluno.nome)}</strong>? Ele vai sumir de todas as telas do sistema.`;
+        document.getElementById('excluirAlunoMotivo').value = 'Manual';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExcluirAluno')).show();
+    }
+
+    // Move o aluno do banco principal pra tabela separada alunos_excluidos —
+    // não fica só "escondido" dentro do mesmo banco: sai de verdade do que é
+    // carregado no login, e passa a existir só na Lixeira.
+    async function confirmarExclusaoAluno() {
+        const id = alunoIdParaExcluir;
+        const motivo = document.getElementById('excluirAlunoMotivo').value;
+        if (!id) return;
+
+        let alunoRemovido = null;
+        const ok = await salvarAlteracaoPontual((dadosFrescos) => {
+            alunoRemovido = dadosFrescos.alunos.find(a => a.id === id);
+            dadosFrescos.alunos = dadosFrescos.alunos.filter(a => a.id !== id);
+        });
+        if (!ok || !alunoRemovido) {
+            alert('Não foi possível excluir agora — sem conexão, ou o aluno já não existe mais. Tente de novo.');
+            return;
         }
+
+        try {
+            const { error } = await supabaseClient.from('alunos_excluidos').insert({
+                id: alunoRemovido.id,
+                dados: alunoRemovido,
+                motivo: motivo,
+                excluido_por: usuarioAtual.email
+            });
+            if (error) throw error;
+        } catch (e) {
+            console.error('Erro ao guardar o aluno na lixeira.', e);
+            alert(`"${alunoRemovido.nome}" foi removido das listas, mas não foi possível guardar na Lixeira agora (sem conexão?). Os dados dele podem ter ficado só num backup anterior — avise o suporte se precisar recuperar.`);
+        }
+
+        registrarLog('Excluiu um aluno', `${alunoRemovido.nome} (RA ${alunoRemovido.ra}) — motivo: ${motivo}`);
+        bootstrap.Modal.getInstance(document.getElementById('modalExcluirAluno')).hide();
+        alunoIdParaExcluir = null;
+        listarAlunos();
     }
 
     function obterAlunosFiltrados() {
