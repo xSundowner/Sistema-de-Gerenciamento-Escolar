@@ -1030,7 +1030,8 @@
                 gap: 14px;
                 min-height: 0;
             }
-            .buscativa-info-wrap { margin-right: 0 !important; }
+            .buscativa-info-wrap { margin-right: 0 !important; min-width: 0; }
+            .buscativa-card.sem-contato .buscativa-acoes-wrap { display: none; }
             .buscativa-img { width: 56px; height: 56px; }
             .buscativa-acoes-wrap {
                 flex-direction: row !important;
@@ -4623,6 +4624,8 @@
             lista = lista.filter(a => a.serie === serieFiltro);
         }
 
+        lista.sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
+
         if (lista.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Nenhum aluno ativo cadastrado ou matriculado nesta data/série.</td></tr>';
             return;
@@ -4714,6 +4717,8 @@
         if (serieFiltro) {
             lista = lista.filter(a => a.serie === serieFiltro);
         }
+
+        lista.sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
 
         if (lista.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Nenhum aluno ativo cadastrado ou matriculado nesta data/série.</td></tr>';
@@ -5844,7 +5849,7 @@
             /* Alterado col-md-6 col-lg-6 para manter rigorosamente 2 colunas e layout vertical expansivo */
             grid.innerHTML += `
                 <div class="col-12 col-md-6 col-lg-6 d-flex">
-                    <div class="buscativa-card d-flex align-items-center justify-content-between w-100">
+                    <div class="buscativa-card d-flex align-items-center justify-content-between w-100 ${(numLimpo || temEmail) ? '' : 'sem-contato'}">
                         <div class="d-flex align-items-center me-3 overflow-hidden buscativa-info-wrap">
                             <img class="lazy-foto-aluno buscativa-img me-3 flex-shrink-0" data-foto-aluno="${a.id}" src="${fotosCache[a.id] || PLACEHOLDER_FOTO}">
                             <div class="text-truncate">
