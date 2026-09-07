@@ -1030,7 +1030,8 @@
                 gap: 14px;
                 min-height: 0;
             }
-            .buscativa-info-wrap { margin-right: 0 !important; }
+            .buscativa-info-wrap { margin-right: 0 !important; min-width: 0; }
+            .buscativa-card.sem-contato .buscativa-acoes-wrap { display: none; }
             .buscativa-img { width: 56px; height: 56px; }
             .buscativa-acoes-wrap {
                 flex-direction: row !important;
@@ -1862,20 +1863,18 @@
 
                     <!-- Oficina -->
                     <div class="card-custom mb-4">
-                        <div class="card-header-custom">
-                            <i class="fas fa-tools me-2"></i>Oficina
+                        <div class="card-header-custom d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-tools me-2"></i>Registro de Oficina</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="addOficinaField()"><i class="fas fa-plus me-1"></i> Adicionar Oficina</button>
                         </div>
                         <div class="card-body">
-                            <div class="rotulos-linha-dinamica">
+                            <div class="rotulos-linha-dinamica" id="oficinas-labels" style="display:none;">
                                 <span class="col-md-2">Data</span>
                                 <span class="col-md-6">Tema</span>
-                                <span class="col-md-4">Aplicador</span>
+                                <span class="col-md-3">Aplicador</span>
+                                <span class="col-md-1"></span>
                             </div>
-                            <div class="row g-2 align-items-center linha-dinamica">
-                                <div class="col-md-2"><input type="date" id="oficinaData" class="form-control form-control-sm"></div>
-                                <div class="col-md-6"><input type="text" id="oficinaTema" class="form-control form-control-sm" placeholder="Tema da Oficina"></div>
-                                <div class="col-md-4"><input type="text" id="oficinaAplicador" class="form-control form-control-sm" placeholder="Nome do Aplicador"></div>
-                            </div>
+                            <div id="oficinas-container"></div>
                         </div>
                     </div>
 
@@ -2127,12 +2126,8 @@
                                         <th>Aplicador</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td id="pdf-oficina-data">-</td>
-                                        <td id="pdf-oficina-tema">-</td>
-                                        <td id="pdf-oficina-aplicador">-</td>
-                                    </tr>
+                                <tbody id="pdf-tabela-oficina">
+                                    <tr><td colspan="3">Nenhuma oficina registrada.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -3128,7 +3123,7 @@
                 nee: p.nee,
                 registrosPorSerie: { [p.serie]: { presencas, notas } },
                 plantoes: i % 4 === 0 ? [{ id: 'demo-plantao-' + i, materia: materiasComNota[0], data: diasAtras(5) }] : [],
-                oficina: i % 3 === 0 ? { data: diasAtras(20), tema: 'Oficina de Redação', aplicador: 'Prof. Coordenador(a)' } : { data: '', tema: '', aplicador: '' },
+                oficina: i % 3 === 0 ? [{ id: 'demo-oficina-' + i, data: diasAtras(20), tema: 'Oficina de Redação', aplicador: 'Prof. Coordenador(a)' }] : [],
                 itinerarios: [],
                 novaAvaliacao: { necessario: 'NÃO', observacao: '', campos: [] }
             };
@@ -4206,7 +4201,7 @@
             id: id,
             registrosPorSerie: {},
             plantoes: [],
-            oficina: { data: '', tema: '', aplicador: '' },
+            oficina: [],
             itinerarios: [],
             novaAvaliacao: { necessario: 'NÃO', observacao: '', campos: [] }
         };
@@ -4474,6 +4469,8 @@
             lista = lista.filter(a => a.serie === serieFiltro);
         }
 
+        lista.sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
+
         if (lista.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Nenhum aluno ativo cadastrado ou matriculado nesta data/série.</td></tr>';
             return;
@@ -4565,6 +4562,8 @@
         if (serieFiltro) {
             lista = lista.filter(a => a.serie === serieFiltro);
         }
+
+        lista.sort((a, b) => (a.nome || '').localeCompare((b.nome || ''), 'pt-BR', { sensitivity: 'base' }));
 
         if (lista.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Nenhum aluno ativo cadastrado ou matriculado nesta data/série.</td></tr>';
@@ -4760,6 +4759,7 @@
     // mostra um aviso e espera liberar sozinho.
     async function tentarBloquearNotasAluno(alunoId) {
         mostrarAvisoBloqueio(null);
+        bloqueioAtual = { alunoId }; // marca como "travado" pra este usuário (só existe um, na demo)
         return true;
     }
 
@@ -4842,9 +4842,10 @@
             }
         });
 
-        document.getElementById('oficinaData').value = aluno.oficina ? aluno.oficina.data || '' : '';
-        document.getElementById('oficinaTema').value = aluno.oficina ? aluno.oficina.tema || '' : '';
-        document.getElementById('oficinaAplicador').value = aluno.oficina ? aluno.oficina.aplicador || '' : '';
+        const oficinasDoAluno = Array.isArray(aluno.oficina)
+            ? aluno.oficina
+            : (aluno.oficina && (aluno.oficina.data || aluno.oficina.tema || aluno.oficina.aplicador) ? [aluno.oficina] : []);
+        renderOficinas(oficinasDoAluno);
 
         renderItinerarios(aluno.itinerarios || []);
 
@@ -4892,6 +4893,35 @@
         const label = document.getElementById(labelId);
         if (!container || !label) return;
         label.style.display = container.querySelector('.linha-dinamica') ? 'flex' : 'none';
+    }
+
+    function renderOficinas(list) {
+        const container = document.getElementById('oficinas-container');
+        container.innerHTML = '';
+        if (!list.length) {
+            container.innerHTML = '<div class="lista-vazia-hint"><i class="fas fa-tools me-2"></i>Nenhuma oficina registrada ainda.</div>';
+            sincronizarRotulos('oficinas-container', 'oficinas-labels');
+            return;
+        }
+        list.forEach(item => addOficinaField(item));
+    }
+
+    function addOficinaField(data = {}) {
+        const container = document.getElementById('oficinas-container');
+        const hint = container.querySelector('.lista-vazia-hint');
+        if (hint) hint.remove();
+        const id = data.id || Date.now().toString() + Math.random().toString().substr(2,4);
+        const div = document.createElement('div');
+        div.className = 'row g-2 align-items-center oficina-row linha-dinamica';
+        div.dataset.id = id;
+        div.innerHTML = `
+            <div class="col-md-2"><input type="date" class="form-control form-control-sm ofi-data" value="${data.data || ''}"></div>
+            <div class="col-md-6"><input type="text" class="form-control form-control-sm ofi-tema" placeholder="Tema da Oficina" value="${data.tema ? data.tema.replace(/"/g, '&quot;') : ''}"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm ofi-aplicador" placeholder="Nome do Aplicador" value="${data.aplicador ? data.aplicador.replace(/"/g, '&quot;') : ''}"></div>
+            <div class="col-md-1 text-end"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.oficina-row').remove(); sincronizarRotulos('oficinas-container','oficinas-labels')"><i class="fas fa-times"></i></button></div>
+        `;
+        container.appendChild(div);
+        sincronizarRotulos('oficinas-container', 'oficinas-labels');
     }
 
     function renderItinerarios(list) {
@@ -4990,11 +5020,15 @@
             });
         });
 
-        aluno.oficina = {
-            data: document.getElementById('oficinaData').value,
-            tema: document.getElementById('oficinaTema').value,
-            aplicador: document.getElementById('oficinaAplicador').value
-        };
+        aluno.oficina = [];
+        document.querySelectorAll('.oficina-row').forEach(row => {
+            aluno.oficina.push({
+                id: row.dataset.id,
+                data: row.querySelector('.ofi-data').value,
+                tema: row.querySelector('.ofi-tema').value,
+                aplicador: row.querySelector('.ofi-aplicador').value
+            });
+        });
 
         aluno.itinerarios = [];
         document.querySelectorAll('.itinerario-row').forEach(row => {
@@ -5171,10 +5205,24 @@
             tbodyPlantao.innerHTML = '<tr><td colspan="2">Nenhum plantão de dúvidas registrado para este aluno.</td></tr>';
         }
 
-        const of = aluno.oficina || {};
-        document.getElementById('pdf-oficina-data').innerText = of.data ? of.data.split('-').reverse().join('/') : '-';
-        document.getElementById('pdf-oficina-tema').innerText = of.tema || '-';
-        document.getElementById('pdf-oficina-aplicador').innerText = of.aplicador || '-';
+        const oficinasPdf = Array.isArray(aluno.oficina)
+            ? aluno.oficina
+            : (aluno.oficina && (aluno.oficina.data || aluno.oficina.tema || aluno.oficina.aplicador) ? [aluno.oficina] : []);
+        const tbodyOficina = document.getElementById('pdf-tabela-oficina');
+        tbodyOficina.innerHTML = '';
+        if (oficinasPdf.length > 0) {
+            oficinasPdf.forEach(of => {
+                tbodyOficina.innerHTML += `
+                    <tr>
+                        <td>${of.data ? of.data.split('-').reverse().join('/') : '-'}</td>
+                        <td>${escapeHtml(of.tema) || '-'}</td>
+                        <td>${escapeHtml(of.aplicador) || '-'}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbodyOficina.innerHTML = '<tr><td colspan="3">Nenhuma oficina registrada.</td></tr>';
+        }
 
         const tbodyItin = document.getElementById('pdf-tabela-itinerarios');
         tbodyItin.innerHTML = '';
@@ -5183,9 +5231,9 @@
                 tbodyItin.innerHTML += `
                     <tr>
                         <td>${it.data ? it.data.split('-').reverse().join('/') : '-'}</td>
-                        <td>${it.nome || '-'}</td>
-                        <td>${it.tema || '-'}</td>
-                        <td>${it.professor || '-'}</td>
+                        <td>${escapeHtml(it.nome) || '-'}</td>
+                        <td>${escapeHtml(it.tema) || '-'}</td>
+                        <td>${escapeHtml(it.professor) || '-'}</td>
                     </tr>
                 `;
             });
@@ -5330,11 +5378,14 @@
 
         // --- Registro de Oficina ---
         if (mostrarOficina) {
-            const of = aluno.oficina || {};
-            const oficinaAoa = [
-                ['Data', 'Tema', 'Aplicador'],
-                [of.data ? of.data.split('-').reverse().join('/') : '-', of.tema || '-', of.aplicador || '-']
-            ];
+            const oficinasExcel = Array.isArray(aluno.oficina)
+                ? aluno.oficina
+                : (aluno.oficina && (aluno.oficina.data || aluno.oficina.tema || aluno.oficina.aplicador) ? [aluno.oficina] : []);
+            const oficinaAoa = [['Data', 'Tema', 'Aplicador']];
+            oficinasExcel.forEach(of => {
+                oficinaAoa.push([of.data ? of.data.split('-').reverse().join('/') : '-', of.tema || '-', of.aplicador || '-']);
+            });
+            if (oficinaAoa.length === 1) oficinaAoa.push(['Nenhuma oficina registrada.', '', '']);
             const wsOficina = XLSX.utils.aoa_to_sheet(oficinaAoa);
             wsOficina['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 26 }];
             XLSX.utils.book_append_sheet(wb, wsOficina, 'Oficina');
@@ -5576,7 +5627,7 @@
             /* Alterado col-md-6 col-lg-6 para manter rigorosamente 2 colunas e layout vertical expansivo */
             grid.innerHTML += `
                 <div class="col-12 col-md-6 col-lg-6 d-flex">
-                    <div class="buscativa-card d-flex align-items-center justify-content-between w-100">
+                    <div class="buscativa-card d-flex align-items-center justify-content-between w-100 ${(numLimpo || temEmail) ? '' : 'sem-contato'}">
                         <div class="d-flex align-items-center me-3 overflow-hidden buscativa-info-wrap">
                             <img class="lazy-foto-aluno buscativa-img me-3 flex-shrink-0" data-foto-aluno="${a.id}" src="${fotosCache[a.id] || PLACEHOLDER_FOTO}">
                             <div class="text-truncate">
