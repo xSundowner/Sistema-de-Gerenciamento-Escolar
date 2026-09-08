@@ -3056,7 +3056,7 @@
         tbody.innerHTML = usuarios.map(u => {
             const ehAdmin = u.role === 'admin';
             const inicial = (u.email || '?').trim().charAt(0);
-            const emailEscapado = (u.email || '').replace(/'/g, "\\'");
+            const emailEscapado = (u.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const online = !!presencaOnline[u.id];
             return `
             <tr>
@@ -3425,10 +3425,10 @@
             return `
                 <div class="log-atividade-linha">
                     <div class="log-atividade-topo">
-                        <span class="fw-semibold">${l.usuario_email}</span>
+                        <span class="fw-semibold">${escapeHtml(l.usuario_email)}</span>
                         <span class="text-muted small">${dataFormatada}</span>
                     </div>
-                    <div class="log-atividade-acao">${l.acao}${l.detalhe ? ' — ' + l.detalhe : ''}</div>
+                    <div class="log-atividade-acao">${escapeHtml(l.acao)}${l.detalhe ? ' — ' + escapeHtml(l.detalhe) : ''}</div>
                 </div>
             `;
         }).join('');
@@ -3671,6 +3671,29 @@
         URL.revokeObjectURL(url);
     }
 
+    // Coloca cada aluno importado num formato mínimo previsível: garante que
+    // campos de texto são texto de verdade (nunca objeto/array) e que id e
+    // listas internas existem. Não é sobre o conteúdo do texto (isso já é
+    // tratado no ponto de exibição, por escapeHtml) — é sobre a estrutura do
+    // JSON não quebrar o resto do sistema.
+    function sanitizarAlunoImportado(a) {
+        const texto = (v) => (v === null || v === undefined) ? '' : String(v);
+        return {
+            ...a,
+            id: a && a.id ? texto(a.id) : (Date.now().toString() + Math.random().toString().substr(2, 4)),
+            nome: texto(a && a.nome),
+            ra: texto(a && a.ra),
+            serie: texto(a && a.serie),
+            telefone: texto(a && a.telefone),
+            email: texto(a && a.email),
+            nee: texto(a && a.nee) || 'Não informado',
+            status: texto(a && a.status) || 'Ativo',
+            oficina: Array.isArray(a && a.oficina) ? a.oficina : [],
+            itinerarios: Array.isArray(a && a.itinerarios) ? a.itinerarios : [],
+            plantoes: Array.isArray(a && a.plantoes) ? a.plantoes : []
+        };
+    }
+
     function importarBackup(event) {
         if (!usuarioEhAdmin()) { alert('Somente administradores podem restaurar um backup.'); event.target.value = ''; return; }
         const file = event.target.files[0];
@@ -3681,8 +3704,14 @@
             try {
                 const importedData = JSON.parse(e.target.result);
                 if (importedData && Array.isArray(importedData.alunos)) {
-                    const fotosImportadas = importedData.fotos || {};
+                    const fotosImportadas = (importedData.fotos && typeof importedData.fotos === 'object') ? importedData.fotos : {};
                     delete importedData.fotos;
+                    importedData.alunos = importedData.alunos
+                        .filter(a => a && typeof a === 'object')
+                        .map(sanitizarAlunoImportado);
+                    importedData.config = (importedData.config && typeof importedData.config === 'object')
+                        ? importedData.config
+                        : { nomeEscola: NOME_ESCOLA_PADRAO };
                     db = importedData;
 
                     // Restaura as fotos no Supabase Storage (formato "fotos" do
@@ -4117,7 +4146,7 @@
             const outrasSeries = seriesAnterioresDoAluno(aluno);
             if (outrasSeries.length > 0) {
                 avisoSerie.style.display = 'block';
-                avisoSerie.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando a frequência da série atual (${aluno.serie}). Este aluno também tem frequência registrada em: ${outrasSeries.join(', ')} — consulte o histórico de série no cadastro dele.`;
+                avisoSerie.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando a frequência da série atual (${escapeHtml(aluno.serie)}). Este aluno também tem frequência registrada em: ${outrasSeries.map(escapeHtml).join(', ')} — consulte o histórico de série no cadastro dele.`;
             } else {
                 avisoSerie.style.display = 'none';
             }
@@ -4505,15 +4534,15 @@
                 : `<span class="badge bg-secondary"><i class="fas fa-minus-circle me-1"></i>Inativo</span>`;
 
             const neeBadge = a.nee !== 'Não possui' && a.nee !== 'Não informado' 
-                ? `<span class="badge badge-nee">${a.nee}</span>` 
-                : `<span class="badge bg-light text-dark">${a.nee}</span>`;
+                ? `<span class="badge badge-nee">${escapeHtml(a.nee)}</span>` 
+                : `<span class="badge bg-light text-dark">${escapeHtml(a.nee)}</span>`;
 
             tbody.innerHTML += `
                 <tr>
                     <td class="aluno-td-foto"><img class="lazy-foto-aluno" data-foto-aluno="${a.id}" src="${fotoSrc}" width="40" height="40" style="object-fit:cover; border-radius:50%;"></td>
-                    <td class="aluno-td-ra"><strong>${a.ra}</strong></td>
-                    <td class="aluno-td-nome">${a.nome}</td>
-                    <td class="aluno-td-serie">${a.serie}</td>
+                    <td class="aluno-td-ra"><strong>${escapeHtml(a.ra)}</strong></td>
+                    <td class="aluno-td-nome">${escapeHtml(a.nome)}</td>
+                    <td class="aluno-td-serie">${escapeHtml(a.serie)}</td>
                     <td class="aluno-td-matricula">${dtMatricula}</td>
                     <td class="aluno-td-status">${statusBadge}</td>
                     <td class="aluno-td-telefone">${escapeHtml(a.telefone)}</td>
@@ -4631,8 +4660,8 @@
             const classeStatus = statusSalvo === 'P' ? 'chamada-presente' : statusSalvo === 'F' ? 'chamada-ausente' : 'chamada-pendente';
             tbody.innerHTML += `
                 <tr class="${classeStatus}">
-                    <td class="chamada-aluno"><strong>${aluno.nome}</strong> <span class="chamada-ra">(RA: ${aluno.ra})</span></td>
-                    <td class="chamada-serie">${aluno.serie}</td>
+                    <td class="chamada-aluno"><strong>${escapeHtml(aluno.nome)}</strong> <span class="chamada-ra">(RA: ${escapeHtml(aluno.ra)})</span></td>
+                    <td class="chamada-serie">${escapeHtml(aluno.serie)}</td>
                     <td class="text-center chamada-status-cell">
                         <div class="btn-group" role="group">
                             <input type="radio" class="btn-check" name="pres_${aluno.id}" id="p_${aluno.id}" value="P" ${statusSalvo === 'P' ? 'checked' : ''} onclick="alternarChamada('${aluno.id}', 'P', this)">
@@ -4724,8 +4753,8 @@
 
             tbody.innerHTML += `
                 <tr class="${temRegistro ? 'chamada-presente' : 'chamada-pendente'}">
-                    <td class="chamada-aluno"><strong>${aluno.nome}</strong> <span class="chamada-ra">(RA: ${aluno.ra})</span></td>
-                    <td class="chamada-serie">${aluno.serie}</td>
+                    <td class="chamada-aluno"><strong>${escapeHtml(aluno.nome)}</strong> <span class="chamada-ra">(RA: ${escapeHtml(aluno.ra)})</span></td>
+                    <td class="chamada-serie">${escapeHtml(aluno.serie)}</td>
                     <td class="text-center chamada-status-cell">
                         <div class="btn-group" role="group">
                             <input type="radio" class="btn-check" name="plantao_pres_${aluno.id}" id="pl_p_${aluno.id}" value="P" ${temRegistro ? 'checked' : ''} onclick="alternarPlantao('${aluno.id}', 'P', this)">
@@ -4817,7 +4846,7 @@
             <td class="col-aulao">
                 <div class="data-chip">
                     <i class="fas fa-calendar"></i>
-                    <input type="date" class="form-control form-control-sm text-center input-data-sub" data-mat="${m}" data-campo="aulao_data" value="${dataVal}" title="Data do Aulão">
+                    <input type="date" class="form-control form-control-sm text-center input-data-sub" data-mat="${m}" data-campo="aulao_data" value="${escapeHtml(dataVal)}" title="Data do Aulão">
                 </div>
             </td>
         `;
@@ -4826,10 +4855,10 @@
     function conteudoNotaData(m, key, notaVal, dataVal) {
         return `
             <div class="nota-data-stack">
-                <input type="number" step="0.1" class="form-control form-control-sm text-center input-nota" data-mat="${m}" data-campo="${key}_nota" placeholder="—" value="${notaVal}" oninput="calcularMediaLinha(this)">
+                <input type="number" step="0.1" class="form-control form-control-sm text-center input-nota" data-mat="${m}" data-campo="${key}_nota" placeholder="—" value="${escapeHtml(notaVal)}" oninput="calcularMediaLinha(this)">
                 <div class="data-chip">
                     <i class="fas fa-calendar"></i>
-                    <input type="date" class="form-control form-control-sm text-center input-data-sub" data-mat="${m}" data-campo="${key}_data" value="${dataVal}" title="Data da avaliação">
+                    <input type="date" class="form-control form-control-sm text-center input-data-sub" data-mat="${m}" data-campo="${key}_data" value="${escapeHtml(dataVal)}" title="Data da avaliação">
                 </div>
             </div>
         `;
@@ -5077,7 +5106,7 @@
             const outrasSeries = seriesAnterioresDoAluno(aluno);
             if (outrasSeries.length > 0) {
                 avisoSerieNotas.style.display = 'block';
-                avisoSerieNotas.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando as notas da série atual (${aluno.serie}). Este aluno também tem notas registradas em: ${outrasSeries.join(', ')}.`;
+                avisoSerieNotas.innerHTML = `<i class="fas fa-circle-info me-1"></i>Mostrando as notas da série atual (${escapeHtml(aluno.serie)}). Este aluno também tem notas registradas em: ${outrasSeries.map(escapeHtml).join(', ')}.`;
             } else {
                 avisoSerieNotas.style.display = 'none';
             }
@@ -5182,9 +5211,9 @@
         div.className = 'row g-2 align-items-center oficina-row linha-dinamica';
         div.dataset.id = id;
         div.innerHTML = `
-            <div class="col-md-2"><input type="date" class="form-control form-control-sm ofi-data" value="${data.data || ''}"></div>
-            <div class="col-md-6"><input type="text" class="form-control form-control-sm ofi-tema" placeholder="Tema da Oficina" value="${data.tema ? data.tema.replace(/"/g, '&quot;') : ''}"></div>
-            <div class="col-md-3"><input type="text" class="form-control form-control-sm ofi-aplicador" placeholder="Nome do Aplicador" value="${data.aplicador ? data.aplicador.replace(/"/g, '&quot;') : ''}"></div>
+            <div class="col-md-2"><input type="date" class="form-control form-control-sm ofi-data" value="${escapeHtml(data.data)}"></div>
+            <div class="col-md-6"><input type="text" class="form-control form-control-sm ofi-tema" placeholder="Tema da Oficina" value="${escapeHtml(data.tema)}"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm ofi-aplicador" placeholder="Nome do Aplicador" value="${escapeHtml(data.aplicador)}"></div>
             <div class="col-md-1 text-end"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.oficina-row').remove(); sincronizarRotulos('oficinas-container','oficinas-labels')"><i class="fas fa-times"></i></button></div>
         `;
         container.appendChild(div);
@@ -5211,10 +5240,10 @@
         div.className = 'row g-2 align-items-center itinerario-row linha-dinamica';
         div.dataset.id = id;
         div.innerHTML = `
-            <div class="col-md-2"><input type="date" class="form-control form-control-sm itin-data" value="${data.data || ''}"></div>
-            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-nome" placeholder="Nome Itinerário" value="${data.nome || ''}"></div>
-            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-tema" placeholder="Tema" value="${data.tema || ''}"></div>
-            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-prof" placeholder="Prof. Responsável" value="${data.professor || ''}"></div>
+            <div class="col-md-2"><input type="date" class="form-control form-control-sm itin-data" value="${escapeHtml(data.data)}"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-nome" placeholder="Nome Itinerário" value="${escapeHtml(data.nome)}"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-tema" placeholder="Tema" value="${escapeHtml(data.tema)}"></div>
+            <div class="col-md-3"><input type="text" class="form-control form-control-sm itin-prof" placeholder="Prof. Responsável" value="${escapeHtml(data.professor)}"></div>
             <div class="col-md-1 text-end"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.itinerario-row').remove(); sincronizarRotulos('itinerarios-container','itinerarios-labels')"><i class="fas fa-times"></i></button></div>
         `;
         container.appendChild(div);
@@ -5253,9 +5282,9 @@
                     ${MATERIAS.map(m => `<option value="${m}" ${data.componente === m ? 'selected' : ''}>${m}</option>`).join('')}
                 </select>
             </div>
-            <div class="col-md-3"><input type="number" step="0.1" class="form-control form-control-sm campo-info-anterior" placeholder="Nota anterior" value="${data.notaAnterior || ''}"></div>
+            <div class="col-md-3"><input type="number" step="0.1" class="form-control form-control-sm campo-info-anterior" placeholder="Nota anterior" value="${escapeHtml(data.notaAnterior)}"></div>
             <div class="col-md-1 campo-transicao-seta"><i class="fas fa-arrow-right"></i></div>
-            <div class="col-md-3"><input type="number" step="0.1" class="form-control form-control-sm campo-info-nova" placeholder="Nota nova avaliação" value="${data.notaNova || ''}"></div>
+            <div class="col-md-3"><input type="number" step="0.1" class="form-control form-control-sm campo-info-nova" placeholder="Nota nova avaliação" value="${escapeHtml(data.notaNova)}"></div>
             <div class="col-md-1 text-end"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.campo-info-row').remove(); sincronizarRotulos('campos-info-container','campos-info-labels')"><i class="fas fa-times"></i></button></div>
         `;
         container.appendChild(div);
@@ -5454,7 +5483,7 @@
                     if (idx === 0) {
                         tbodyPlantao.innerHTML += `
                             <tr>
-                                <td style="text-align:left; font-weight:bold; vertical-align:middle;" rowspan="${linhas.length}">${mat}</td>
+                                <td style="text-align:left; font-weight:bold; vertical-align:middle;" rowspan="${linhas.length}">${escapeHtml(mat)}</td>
                                 ${celulasDatas}${vazias}
                             </tr>
                         `;
@@ -5522,9 +5551,9 @@
                 ne.campos.forEach(c => {
                     tbodyNE.innerHTML += `
                         <tr>
-                            <td>${c.componente}</td>
-                            <td>${c.notaAnterior || '-'}</td>
-                            <td>${c.notaNova || '-'}</td>
+                            <td>${escapeHtml(c.componente) || '-'}</td>
+                            <td>${escapeHtml(c.notaAnterior) || '-'}</td>
+                            <td>${escapeHtml(c.notaNova) || '-'}</td>
                             <td style="vertical-align:bottom;"><div style="border-bottom:1px solid #999; height:20px;"></div></td>
                         </tr>
                     `;
@@ -5899,10 +5928,10 @@
                             <img class="lazy-foto-aluno buscativa-img me-3 flex-shrink-0" data-foto-aluno="${a.id}" src="${fotosCache[a.id] || PLACEHOLDER_FOTO}">
                             <div class="text-truncate">
                                 <div class="fw-bold text-truncate fs-5" style="line-height: 1.2;">
-                                    ${a.nome}
+                                    ${escapeHtml(a.nome)}
                                 </div>
                                 <div class="text-muted fs-6 mt-1">
-                                    RA: ${a.ra} | ${a.serie}
+                                    RA: ${escapeHtml(a.ra)} | ${escapeHtml(a.serie)}
                                 </div>
                                 <div class="mt-2 d-flex flex-wrap gap-1">
                                     ${ehAtivo
@@ -5915,7 +5944,7 @@
                         </div>
                         <div class="flex-shrink-0 d-flex flex-column gap-2 buscativa-acoes-wrap">
                             ${numLimpo ? `
-                                <a href="${linkZap}" target="_blank" class="btn btn-success rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Contatar no WhatsApp">
+                                <a href="${linkZap}" target="_blank" rel="noopener noreferrer" class="btn btn-success rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Contatar no WhatsApp">
                                     <i class="fab fa-whatsapp fs-2"></i><span class="buscativa-btn-label">WhatsApp</span>
                                 </a>
                             ` : `
@@ -5924,7 +5953,7 @@
                                 </button>
                             `}
                             ${temEmail ? `
-                                <a href="${mailtoLink}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Enviar e-mail" target="_blank">
+                                <a href="${mailtoLink}" class="btn btn-primary rounded-circle p-2 d-flex align-items-center justify-content-center buscativa-btn-zap" title="Enviar e-mail" target="_blank" rel="noopener noreferrer">
                                     <i class="fas fa-envelope fs-2"></i><span class="buscativa-btn-label">E-mail</span>
                                 </a>
                             ` : `
@@ -5991,9 +6020,9 @@
                 listNotas.innerHTML += `
                     <li class="list-group-item">
                         <a href="#" class="fw-bold text-decoration-none text-primary" onclick="irParaNotasDoAluno('${aluno.id}'); return false;">
-                            <i class="fas fa-external-link-alt me-1 fs-xs"></i>${aluno.nome}
-                        </a> (${aluno.serie})
-                        <br><small class="text-amber">${detalhesVal.join(', ')}</small>
+                            <i class="fas fa-external-link-alt me-1 fs-xs"></i>${escapeHtml(aluno.nome)}
+                        </a> (${escapeHtml(aluno.serie)})
+                        <br><small class="text-amber">${escapeHtml(detalhesVal.join(', '))}</small>
                     </li>
                 `;
             }
@@ -6006,8 +6035,8 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <a href="#" class="fw-bold text-decoration-none text-primary" onclick="irParaFrequenciaDoAluno('${aluno.id}'); return false;">
-                            <i class="fas fa-external-link-alt me-1 fs-xs"></i>${aluno.nome}
-                        </a> (${aluno.serie})
+                            <i class="fas fa-external-link-alt me-1 fs-xs"></i>${escapeHtml(aluno.nome)}
+                        </a> (${escapeHtml(aluno.serie)})
                         <br><small class="text-muted">${presentes} presenças em ${totalDias} dias registrados</small>
                     </div>
                     <span class="badge rounded-pill ${pct < 75 ? 'bg-danger' : 'freq-alert-laranja'}">${pct.toFixed(0)}% Freq.</span>
