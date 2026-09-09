@@ -60,26 +60,31 @@
         .sidebar {
             background: var(--primary-color);
             color: white;
-            padding-top: 20px;
+            padding-top: 12px;
             position: fixed;
             top: 0;
             left: 0;
-            width: 260px;
+            width: 210px;
             height: 100vh;
             overflow-y: auto;
             z-index: 1030;
+            font-size: 13.5px;
         }
 
         .main-content {
-            margin-left: 260px;
-            width: calc(100% - 260px);
+            margin-left: 210px;
+            width: calc(100% - 210px);
         }
 
         .sidebar .nav-link {
+            display: flex;
+            align-items: center;
             color: #e2e8f0;
-            padding: 12px 20px;
-            margin: 4px 10px;
-            border-radius: 8px;
+            padding: 8px 14px;
+            margin: 2px 8px;
+            border-radius: 7px;
+            font-size: 13.5px;
+            line-height: 1.3;
             transition: all 0.3s;
         }
 
@@ -89,19 +94,26 @@
             font-weight: 600;
         }
 
+        .sidebar .nav-link i {
+            width: 16px;
+            text-align: center;
+            margin-right: 6px !important;
+            font-size: 13px;
+        }
+
         /* --- Bloco utilitário do rodapé da sidebar (arquivo/backup/sair) --- */
         .sidebar-util-block {
             background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            margin: 6px 10px 0;
-            padding: 12px 10px;
+            border-radius: 8px;
+            margin: 4px 8px 0;
+            padding: 8px 8px;
         }
 
         .sidebar-util-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: #8fa2c2;
-            padding: 0 6px 6px;
+            padding: 0 4px 4px;
         }
 
         /* Esconde tudo que é exclusivo do admin quando o usuário logado é professor */
@@ -110,10 +122,10 @@
         .sidebar-status-line {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-            font-size: 12.5px;
-            padding: 2px 6px 8px;
-            line-height: 1.3;
+            gap: 6px;
+            font-size: 11.5px;
+            padding: 1px 4px 5px;
+            line-height: 1.25;
         }
 
         .sidebar-status-line > i {
@@ -146,11 +158,11 @@
         .sidebar-util-link {
             display: flex;
             align-items: center;
-            gap: 9px;
-            padding: 8px 8px;
-            border-radius: 7px;
+            gap: 7px;
+            padding: 5px 6px;
+            border-radius: 6px;
             color: #dbe4f0;
-            font-size: 13px;
+            font-size: 12px;
             text-decoration: none;
             transition: background .15s ease, color .15s ease;
         }
@@ -161,14 +173,14 @@
         }
 
         .sidebar-util-link i {
-            width: 15px;
+            width: 13px;
             text-align: center;
-            font-size: 12.5px;
+            font-size: 11.5px;
         }
 
         .sidebar-divider {
             border-top: 1px solid rgba(255,255,255,0.09);
-            margin: 12px 16px;
+            margin: 8px 12px;
         }
 
         .sidebar-link-danger {
@@ -1823,9 +1835,9 @@
     <div class="row">
         <!-- Sidebar Navigation -->
         <nav class="col-md-3 col-lg-2 sidebar">
-            <div class="text-center mb-4" onclick="registrarCliqueLogoLixeira()" style="cursor:default;">
-                <i class="fas fa-graduation-cap fa-2x text-white mb-2"></i>
-                <h5 class="text-white">Sistema de Gestão Escolar</h5>
+            <div class="text-center mb-3" onclick="registrarCliqueLogoLixeira()" style="cursor:default;">
+                <i class="fas fa-graduation-cap text-white mb-1" style="font-size:1.4rem;"></i>
+                <h6 class="text-white mb-0" style="font-size:0.85rem; font-weight:700; line-height:1.25; padding:0 8px;">Sistema de Gestão Escolar</h6>
             </div>
             <ul class="nav flex-column">
                 <li class="nav-item">
@@ -1849,7 +1861,7 @@
                 <li class="nav-item apenas-admin">
                     <a class="nav-link" href="#" onclick="showSection('usuarios', this)"><i class="fas fa-users-gear me-2"></i> Usuários</a>
                 </li>
-                <li class="nav-item mt-4 pt-2">
+                <li class="nav-item mt-2 pt-1">
                     <div class="sidebar-util-block">
                         <div class="sidebar-util-label">Aparência</div>
                         <button type="button" class="theme-toggle-btn sidebar-util-link" onclick="alternarModoNoturno()" title="Alternar modo claro/escuro">
@@ -1864,7 +1876,6 @@
                         <div id="indicador-conta" class="sidebar-status-line sidebar-status-success">
                             <i class="fas fa-cloud"></i>Conectado
                         </div>
-                        <a class="sidebar-util-link" href="#" onclick="sair(); return false;"><i class="fas fa-right-from-bracket"></i>Sair</a>
                     </div>
                     <div class="sidebar-divider apenas-admin"></div>
                     <div class="sidebar-util-block apenas-admin">
