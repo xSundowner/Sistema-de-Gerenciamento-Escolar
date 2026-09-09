@@ -1,9 +1,9 @@
-# 🎓 Sistema de Gestão Escolar EJA (Complementar)
+# 🎓 Sistema de Gestão Escolar EJA
 
-> **Solução complementar leve, responsiva e de baixo custo para administração da Educação de Jovens e Adultos (EJA).**
+> Solução complementar, leve, responsiva e de baixo custo para a administração da **Educação de Jovens e Adultos (EJA)**.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Type](https://img.shields.io/badge/architecture-SPA-emerald.svg)
+![Architecture](https://img.shields.io/badge/architecture-SPA-emerald.svg)
 ![Hosting](https://img.shields.io/badge/hosting-GitHub%20Pages-black.svg)
 ![Database](https://img.shields.io/badge/database-Supabase%20PostgreSQL-green.svg)
 
@@ -11,47 +11,257 @@
 
 ## 📌 Sobre o Projeto
 
-Este software foi desenvolvido sob encomenda para suprir necessidades administrativas e pedagógicas específicas do programa de **Educação de Jovens e Adultos (EJA)** em uma instituição de ensino.
+O **Sistema de Gestão Escolar EJA** foi desenvolvido sob encomenda para atender necessidades administrativas e pedagógicas específicas do programa de **Educação de Jovens e Adultos (EJA)** de uma instituição de ensino.
 
-Como a escola já utiliza um sistema proprietário legado para a gestão escolar principal, este projeto atua de forma **complementar e especializada**[cite: 1]. Além disso, devido ao **orçamento reduzido**[cite: 1], foi desenhada uma arquitetura *Zero-Server Overhead*, utilizando **SPA (Single Page Application)**[cite: 1] hospedada no **GitHub Pages**[cite: 1] e utilizando o **Supabase**[cite: 1] como banco de dados e autenticação Serverless (BaaS).
+Como a escola já utiliza um sistema proprietário legado para sua gestão escolar principal, esta aplicação funciona como uma **solução complementar e especializada**, concentrando recursos específicos para o acompanhamento dos alunos, frequência, notas, atividades e processos administrativos relacionados à EJA.
+
+Considerando também a necessidade de manter os custos operacionais reduzidos, o projeto utiliza uma arquitetura **Serverless / Zero-Server Overhead**, baseada em uma **SPA (Single Page Application)** hospedada gratuitamente no **GitHub Pages**, utilizando o **Supabase** como plataforma de banco de dados e autenticação.
+
+### 🎯 Objetivos
+
+* Centralizar informações específicas da EJA.
+* Simplificar tarefas administrativas e pedagógicas.
+* Facilitar o acompanhamento de frequência e desempenho dos alunos.
+* Reduzir processos manuais e utilização de planilhas.
+* Manter uma infraestrutura de baixo custo e fácil manutenção.
+* Disponibilizar acesso responsivo em computadores, tablets e dispositivos móveis.
 
 ---
 
 ## ⚡ Principais Funcionalidades
 
-- 📊 **Dashboard Dinâmico:** Visualização rápida de métricas gerais da escola, alertas em tempo real de baixa frequência (< 85%) e alunos com pendências em notas.
-- 🎓 **Gestão Completa de Alunos (CRUD):**
-  - Cadastro completo com foto de perfil, RA, Matrícula, Série e Telefone[cite: 1].
-  - Suporte a registro de **NEE** (Necessidades Educacionais Especiais)[cite: 1].
-  - Busca inteligente, filtros por status e paginação otimizada.
-  - Exportação direta de dados dos alunos para **Excel (.xlsx)**.
-- 📅 **Controle de Presença & Plantão de Dúvidas:**
-  - **Chamada Diária:** Registro de presença/ausência com salvamento em tempo real[cite: 1].
-  - **Plantão:** Registro e acompanhamento de atendimento aos estudantes.
-  - **Calendário e Frequência:** Grade mensal visual do percentual de presença.
-- 📝 **Notas e Atividades:**
-  - Lançamento simplificado por disciplinas e itinerários[cite: 1].
-  - Média calculada automaticamente com sistema de *lock* (bloqueio de edição simultânea) para evitar conflitos de professores.
-- 📑 **Relatórios & Emissão de PDF:**
-  - Geração de boletins e fichas do aluno formatados para impressão em PDF[cite: 1].
-  - Exportação em lote compactada em arquivo `.ZIP`.
-- 💬 **Módulo Buscativa (WhatsApp):**
-  - Botão de ação rápida integrado ao WhatsApp para contato direto com alunos em risco de evasão[cite: 1].
-- 🔐 **Controle de Acesso e Segurança:**
-  - Níveis de acesso distintos (Administrador vs. Professor)[cite: 1].
-  - Suporte a modo noturno (Dark Mode)[cite: 1], Backup/Restauração de dados em JSON e Log de Atividades[cite: 1].
+### 📊 Dashboard
+
+* Visualização rápida das principais métricas da escola.
+* Indicadores de frequência dos alunos.
+* Alertas para alunos com frequência abaixo de **85%**.
+* Identificação de alunos com pendências relacionadas às notas.
+* Atualização das informações de forma dinâmica.
+
+### 🎓 Gestão de Alunos
+
+Sistema completo de gerenciamento de alunos (CRUD):
+
+* Cadastro e edição de informações pessoais.
+* Foto de perfil.
+* Registro Acadêmico (RA).
+* Número de matrícula.
+* Série.
+* Telefone.
+* Registro de **NEE (Necessidades Educacionais Especiais)**.
+* Busca inteligente.
+* Filtros por status.
+* Paginação otimizada.
+* Exportação dos dados para **Excel (.xlsx)**.
+
+### 📅 Controle de Presença
+
+* Chamada diária dos alunos.
+* Registro de presença e ausência.
+* Salvamento das informações em tempo real.
+* Consulta do histórico de frequência.
+* Visualização mensal do percentual de presença.
+* Acompanhamento individual da frequência.
+
+### 💬 Plantão de Dúvidas
+
+* Registro de atendimentos realizados.
+* Acompanhamento dos estudantes atendidos.
+* Histórico dos atendimentos.
+* Organização das informações por aluno e data.
+
+### 📝 Notas e Atividades
+
+* Lançamento de notas por disciplina.
+* Organização por disciplinas e itinerários.
+* Registro de atividades.
+* Cálculo automático de médias.
+* Sistema de **lock** para evitar conflitos durante a edição simultânea por professores.
+
+### 📑 Relatórios e PDFs
+
+* Geração de boletins.
+* Geração de fichas individuais dos alunos.
+* Documentos formatados para impressão.
+* Exportação para **PDF**.
+* Geração de relatórios em lote.
+* Compactação de múltiplos documentos em arquivo **.ZIP**.
+
+### 💬 Módulo Buscativa
+
+Ferramenta voltada ao acompanhamento de alunos com risco de evasão:
+
+* Identificação de alunos em situação de atenção.
+* Ação rápida para contato.
+* Integração com **WhatsApp**.
+* Facilitação do processo de busca ativa e acompanhamento.
+
+### 🔐 Controle de Acesso e Segurança
+
+* Autenticação de usuários.
+* Diferentes níveis de acesso:
+
+  * **Administrador**
+  * **Professor**
+* Controle de permissões conforme o perfil.
+* Log de atividades.
+* Backup dos dados em **JSON**.
+* Restauração de dados.
+* Suporte a **Dark Mode**.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-### **Frontend**
-- **HTML5 & CSS3 Variables** (Design customizado com temas Claro/Escuro)
-- **Bootstrap 5.3** & **FontAwesome 6** (Interface responsiva e moderna)
-- **JavaScript Vanilla (ES6+)** (Sem frameworks pesados, garantindo carregamento ultrarrápido)
-- **PWA (Progressive Web App):** Instalável em dispositivos móveis e desktops.
-- **Bibliotecas Auxiliares:** `SheetJS` (Excel), `html2pdf.js` (PDF) e `JSZip`.
+### Frontend
 
-### **Backend & Infraestrutura**
-- **Hosting:** [GitHub Pages](https://pages.github.com/) (Hospedagem estática gratuita com SSL)
-- **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL relacional com GoTrue Auth)
+* **HTML5**
+* **CSS3**
+* **CSS Variables** para gerenciamento de temas.
+* **Bootstrap 5.3** para interface responsiva.
+* **Font Awesome 6** para ícones.
+* **JavaScript Vanilla (ES6+)**.
+* **PWA (Progressive Web App)** para instalação em desktops e dispositivos móveis.
+
+### Bibliotecas
+
+| Biblioteca       | Finalidade                                 |
+| ---------------- | ------------------------------------------ |
+| **SheetJS**      | Exportação e manipulação de arquivos Excel |
+| **html2pdf.js**  | Geração de documentos PDF                  |
+| **JSZip**        | Compactação de arquivos em `.ZIP`          |
+| **Bootstrap**    | Componentes e responsividade da interface  |
+| **Font Awesome** | Ícones da aplicação                        |
+
+### Backend e Infraestrutura
+
+* **GitHub Pages** — hospedagem estática gratuita com SSL.
+* **Supabase** — plataforma Backend as a Service (BaaS).
+* **PostgreSQL** — banco de dados relacional.
+* **GoTrue Auth** — autenticação e gerenciamento de usuários.
+
+---
+
+## 🏗️ Arquitetura
+
+A aplicação utiliza uma arquitetura **SPA (Single Page Application)**, mantendo a maior parte da lógica no frontend e utilizando o Supabase para os serviços de backend.
+
+```text
+┌──────────────────────────────┐
+│         Usuário              │
+│   Desktop / Tablet / Mobile  │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│       GitHub Pages           │
+│      Frontend / SPA          │
+│                              │
+│ HTML + CSS + JavaScript      │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│          Supabase            │
+│                              │
+│  ┌──────────┐  ┌──────────┐ │
+│  │PostgreSQL│  │   Auth   │ │
+│  └──────────┘  └──────────┘ │
+└──────────────────────────────┘
+```
+
+Essa abordagem elimina a necessidade de manter um servidor de aplicação próprio, reduzindo custos de infraestrutura e manutenção.
+
+---
+
+## 📱 Responsividade e PWA
+
+A aplicação foi desenvolvida para funcionar em diferentes dispositivos e tamanhos de tela.
+
+O suporte a **Progressive Web App (PWA)** permite que o sistema possa ser instalado como uma aplicação no:
+
+* 💻 Windows
+* 📱 Android
+* 📱 iOS
+* 🖥️ Outros dispositivos compatíveis
+
+---
+
+## 🚀 Deploy
+
+O frontend pode ser hospedado diretamente através do **GitHub Pages**, eliminando custos de hospedagem tradicional.
+
+O banco de dados e os serviços de autenticação são fornecidos pelo **Supabase**.
+
+### Fluxo de publicação
+
+```text
+Código
+   │
+   ▼
+GitHub Repository
+   │
+   ▼
+GitHub Pages
+   │
+   ▼
+Aplicação Web
+   │
+   ▼
+Supabase
+ ├── PostgreSQL
+ └── Authentication
+```
+
+---
+
+## 🔒 Segurança
+
+A aplicação utiliza autenticação e controle de acesso para separar as permissões entre diferentes tipos de usuários.
+
+O acesso aos dados deve ser protegido através das políticas de segurança do PostgreSQL/Supabase, utilizando **Row Level Security (RLS)** quando aplicável.
+
+> **Importante:** credenciais, chaves privadas ou informações sensíveis do ambiente de produção não devem ser armazenadas diretamente no repositório.
+
+---
+
+## 📂 Estrutura do Projeto
+
+Uma estrutura típica do projeto pode ser organizada da seguinte forma:
+
+```text
+/
+├── assets/
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── components/
+│
+├── pages/
+│
+├── services/
+│
+├── index.html
+├── manifest.json
+├── service-worker.js
+└── README.md
+```
+
+A estrutura pode variar conforme a organização atual do código-fonte.
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **MIT License**.
+
+Consulte o arquivo [`LICENSE`](LICENSE) para obter mais informações.
+
+---
+
+## 👨‍💻 Desenvolvimento
+
+Projeto desenvolvido como uma solução personalizada para apoiar os processos administrativos e pedagógicos da **Educação de Jovens e Adultos (EJA)**.
+
+---
