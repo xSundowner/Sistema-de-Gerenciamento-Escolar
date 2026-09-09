@@ -164,9 +164,9 @@ A aplicação utiliza uma arquitetura **SPA (Single Page Application)**, mantend
 ┌──────────────────────────────┐
 │          Supabase            │
 │                              │
-│  ┌──────────┐  ┌──────────┐ │
-│  │PostgreSQL│  │   Auth   │ │
-│  └──────────┘  └──────────┘ │
+│  ┌──────────┐  ┌──────────┐  │
+│  │PostgreSQL│  │   Auth   │  │
+│  └──────────┘  └──────────┘  │
 └──────────────────────────────┘
 ```
 
@@ -220,43 +220,6 @@ Supabase
 A aplicação utiliza autenticação e controle de acesso para separar as permissões entre diferentes tipos de usuários.
 
 O acesso aos dados deve ser protegido através das políticas de segurança do PostgreSQL/Supabase, utilizando **Row Level Security (RLS)** quando aplicável.
-
-> **Importante:** credenciais, chaves privadas ou informações sensíveis do ambiente de produção não devem ser armazenadas diretamente no repositório.
-
----
-
-## 📂 Estrutura do Projeto
-
-Uma estrutura típica do projeto pode ser organizada da seguinte forma:
-
-```text
-/
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── images/
-│
-├── components/
-│
-├── pages/
-│
-├── services/
-│
-├── index.html
-├── manifest.json
-├── service-worker.js
-└── README.md
-```
-
-A estrutura pode variar conforme a organização atual do código-fonte.
-
----
-
-## 📄 Licença
-
-Este projeto está licenciado sob a **MIT License**.
-
-Consulte o arquivo [`LICENSE`](LICENSE) para obter mais informações.
 
 ---
 
