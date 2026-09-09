@@ -55,14 +55,3 @@ Como a escola já utiliza um sistema proprietário legado para a gestão escolar
 ### **Backend & Infraestrutura**
 - **Hosting:** [GitHub Pages](https://pages.github.com/) (Hospedagem estática gratuita com SSL)
 - **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL relacional com GoTrue Auth)
-
----
-
-## 🚀 Como Executar o Projeto Localmente
-
-Como o projeto é uma SPA pura, não é necessário instalar dependências de Node.js ou compilar pacotes.
-
-1. **Clone o repositório:**
-   ```bash
-   git clone [https://github.com/seu-usuario/nome-do-repositorio.git](https://github.com/seu-usuario/nome-do-repositorio.git)
-   cd nome-do-repositorio
