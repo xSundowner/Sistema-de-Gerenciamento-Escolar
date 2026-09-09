@@ -1,4 +1,4 @@
-# 🎓 Sistema de Gestão Escolar EJA
+# 🎓 Sistema de Gestão Escolar
 
 > Solução complementar, leve, responsiva e de baixo custo para a administração da **Educação de Jovens e Adultos (EJA)**.
 
