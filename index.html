@@ -28,6 +28,27 @@
             --primary-color: #1a365d;
             --secondary-color: #2b6cb0;
             --bg-light: #f7fafc;
+            /* Cores de texto/ícone "sobre superfície" (cards, tabelas, modais).
+               Em modo claro são iguais às cores de marca; no modo noturno
+               (body.dark-mode) são substituídas por tons mais claros para
+               manter contraste sobre fundos escuros. */
+            --heading-color: var(--primary-color);
+            --accent-color: var(--secondary-color);
+
+            /* Paleta do modo noturno */
+            --dm-bg: #0f172a;
+            --dm-bg-elevated: #1e293b;
+            --dm-bg-elevated-2: #263449;
+            --dm-border: #334155;
+            --dm-text: #e2e8f0;
+            --dm-text-muted: #94a3b8;
+            --dm-heading: #7dc4fb;
+            --dm-accent: #60a5fa;
+        }
+
+        body.dark-mode {
+            --heading-color: var(--dm-heading);
+            --accent-color: var(--dm-accent);
         }
 
         body {
@@ -194,7 +215,7 @@
             border-top-left-radius: 12px !important;
             border-top-right-radius: 12px !important;
             font-weight: bold;
-            color: var(--primary-color);
+            color: var(--heading-color);
         }
 
         .card-custom .card-body {
@@ -327,7 +348,7 @@
             margin-left: 3px;
             color: #94a3b8;
         }
-        .ajuda-serie-icone:hover { color: var(--secondary-color); }
+        .ajuda-serie-icone:hover { color: var(--accent-color); }
 
         .ajuda-serie-popover {
             margin-top: 8px;
@@ -442,16 +463,16 @@
         .toggle-categoria.ativo {
             background: #eaf2fb;
             border-color: var(--secondary-color);
-            color: var(--primary-color);
+            color: var(--heading-color);
         }
 
         .toggle-categoria.ativo i {
-            color: var(--secondary-color);
+            color: var(--accent-color);
         }
 
         .toggle-categoria .fa-check-circle {
             margin-left: auto;
-            color: var(--secondary-color);
+            color: var(--accent-color);
             display: none;
             font-size: 13px;
         }
@@ -477,7 +498,7 @@
 
         .tabela-app thead th {
             background: #f8fafc;
-            color: var(--primary-color);
+            color: var(--heading-color);
             font-weight: 700;
             font-size: 12.5px;
             border-bottom: 2px solid #e2e8f0 !important;
@@ -509,7 +530,7 @@
         }
 
         .tabela-notas thead th.th-media {
-            color: var(--secondary-color);
+            color: var(--accent-color);
         }
 
         .tabela-notas thead th.th-validacao {
@@ -519,7 +540,7 @@
         .col-materia {
             text-align: left;
             padding-left: 16px !important;
-            color: var(--primary-color);
+            color: var(--heading-color);
             font-weight: 600;
             font-size: 13.5px;
         }
@@ -539,7 +560,7 @@
         .input-nota {
             font-weight: 700 !important;
             font-size: 14px !important;
-            color: var(--primary-color);
+            color: var(--heading-color);
             border: 1px solid #e2e8f0 !important;
             background: #fff;
         }
@@ -579,7 +600,7 @@
         .input-data-sub:hover, .input-data-sub:focus {
             background: #fff !important;
             border-color: var(--secondary-color) !important;
-            color: var(--primary-color) !important;
+            color: var(--heading-color) !important;
         }
 
         .col-aulao {
@@ -595,7 +616,7 @@
             font-weight: 700;
             font-size: 14px;
             background: rgba(43,108,176,0.1);
-            color: var(--secondary-color);
+            color: var(--accent-color);
         }
 
         .badge-media.vazio {
@@ -716,6 +737,11 @@
             color: #1e293b;
             counter-reset: pdf-section-counter;
             line-height: 1.35;
+            /* O relatório (visualização e PDF gerado) sempre usa as cores de
+               marca originais, independente do modo noturno estar ativo na
+               tela — o papel é sempre branco. */
+            --heading-color: var(--primary-color);
+            --accent-color: var(--secondary-color);
         }
 
         .pdf-header {
@@ -757,7 +783,7 @@
         }
 
         .pdf-header h3 {
-            color: var(--primary-color);
+            color: var(--heading-color);
             font-size: 20px;
             letter-spacing: .02em;
         }
@@ -777,7 +803,7 @@
             align-items: center;
             gap: 8px;
             background: #f1f5f9;
-            color: var(--primary-color);
+            color: var(--heading-color);
             padding: 8px 12px;
             font-weight: 700;
             font-size: 11px;
@@ -843,7 +869,7 @@
         }
 
         .pdf-student-name {
-            color: var(--primary-color);
+            color: var(--heading-color);
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 7px;
@@ -915,7 +941,7 @@
 
         .pdf-table .pdf-final-note {
             background: #eff6ff;
-            color: var(--primary-color);
+            color: var(--heading-color);
             font-size: 11px;
         }
 
@@ -1179,12 +1205,12 @@
         }
         #presencaTabs .nav-link i { font-size: 13px; }
         #presencaTabs .nav-link:hover:not(.active) {
-            color: var(--primary-color);
+            color: var(--heading-color);
             background: rgba(255,255,255,.65);
         }
         #presencaTabs .nav-link.active {
             background: #fff;
-            color: var(--primary-color);
+            color: var(--heading-color);
             box-shadow: 0 2px 7px rgba(15,23,42,.09);
         }
         @media (max-width: 767.98px) {
@@ -1362,7 +1388,7 @@
             cursor: pointer;
             z-index: 2;
         }
-        .auth-input-wrap .auth-toggle-senha:hover { color: var(--secondary-color); }
+        .auth-input-wrap .auth-toggle-senha:hover { color: var(--accent-color); }
         .auth-submit{height:48px;border:0!important;border-radius:12px!important;font-weight:700;letter-spacing:.01em;background:linear-gradient(135deg,var(--secondary-color),var(--primary-color))!important;box-shadow:0 9px 18px rgba(26,54,93,.22);transition:transform .18s ease,box-shadow .18s ease}.auth-submit:hover{transform:translateY(-1px);box-shadow:0 12px 22px rgba(26,54,93,.28)}
         .auth-link{color:var(--secondary-color);font-weight:600;text-decoration:none}.auth-link:hover{text-decoration:underline}.auth-security{margin-top:25px;padding-top:17px;border-top:1px solid #e8edf3;color:#94a3b8;font-size:.75rem;text-align:center}.auth-security i{margin-right:5px}
         #auth-form-criar .form-control,#auth-form-recuperar .form-control{border-radius:12px;min-height:46px}#auth-form-criar .btn,#auth-form-recuperar .btn{border-radius:12px;min-height:46px;font-weight:700}#auth-form-criar .form-label,#auth-form-recuperar .form-label{color:#334155;font-size:.84rem;font-weight:700}
@@ -1373,16 +1399,351 @@
         .alunos-pag-info{color:#64748b;font-size:.83rem;font-weight:500}
         .pagination-custom{display:flex;align-items:center;gap:6px;list-style:none;margin:0;padding:0}
         .pagination-custom .page-item{display:flex}
-        .pagination-custom .page-link{appearance:none;-webkit-appearance:none;margin:0;outline:none;min-width:36px;height:36px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:var(--primary-color);font-weight:600;font-size:.85rem;line-height:1;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s;box-shadow:none}
-        .pagination-custom .page-link:hover{background:#f1f6fb;border-color:var(--secondary-color);color:var(--secondary-color)}
+        .pagination-custom .page-link{appearance:none;-webkit-appearance:none;margin:0;outline:none;min-width:36px;height:36px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:var(--heading-color);font-weight:600;font-size:.85rem;line-height:1;cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .1s;box-shadow:none}
+        .pagination-custom .page-link:hover{background:#f1f6fb;border-color:var(--secondary-color);color:var(--accent-color)}
         .pagination-custom .page-link:active{transform:scale(.95)}
         .pagination-custom .page-item.active .page-link{background:linear-gradient(135deg,var(--secondary-color),var(--primary-color));border-color:transparent;color:#fff;box-shadow:0 4px 10px rgba(26,54,93,.25)}
         .pagination-custom .page-item.disabled .page-link{color:#cbd5e1;border-color:#eef2f6;cursor:not-allowed;background:#f8fafc}
         .pagination-custom .page-item.disabled .page-link:hover{background:#f8fafc;border-color:#eef2f6;color:#cbd5e1}
         @media(max-width:576px){.alunos-pag-footer{flex-direction:column;align-items:stretch!important;gap:10px}.pagination-custom{justify-content:center;flex-wrap:wrap}}
+
+        /* ============================================================
+           BOTÃO DE ALTERNAR MODO NOTURNO
+           ============================================================ */
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        .theme-toggle-switch {
+            position: relative;
+            width: 34px;
+            height: 18px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.18);
+            flex-shrink: 0;
+            transition: background .2s ease;
+        }
+        .theme-toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform .2s ease;
+        }
+        body.dark-mode .theme-toggle-switch {
+            background: var(--dm-accent);
+        }
+        body.dark-mode .theme-toggle-switch::after {
+            transform: translateX(16px);
+        }
+        .mobile-topbar-theme-btn {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: 16px;
+            margin-left: auto;
+            padding: 6px;
+        }
+
+        /* ============================================================
+           MODO NOTURNO
+           As regras abaixo só se aplicam com body.dark-mode ativo e
+           deixam de fora o template de PDF (#pdf-template usa apenas
+           classes próprias .pdf-*, então o relatório continua sendo
+           gerado em fundo branco normalmente).
+           ============================================================ */
+        body.dark-mode {
+            background-color: var(--dm-bg);
+            color: var(--dm-text);
+        }
+
+        body.dark-mode .main-content { background-color: transparent; }
+
+        body.dark-mode .sidebar { box-shadow: 2px 0 14px rgba(0,0,0,.35); }
+
+        body.dark-mode .mobile-topbar { background: var(--dm-bg-elevated-2); color: var(--dm-text); }
+
+        /* Cards */
+        body.dark-mode .card-custom,
+        body.dark-mode .card {
+            background-color: var(--dm-bg-elevated);
+            color: var(--dm-text);
+        }
+        body.dark-mode .card { border-color: var(--dm-border); }
+        body.dark-mode .card-header-custom {
+            background-color: var(--dm-bg-elevated-2);
+            border-bottom-color: var(--dm-border);
+        }
+        body.dark-mode .card-header,
+        body.dark-mode .card-footer {
+            background-color: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text);
+        }
+
+        /* Texto secundário / rótulos */
+        body.dark-mode .text-muted { color: var(--dm-text-muted) !important; }
+        body.dark-mode .text-secondary { color: var(--dm-text-muted) !important; }
+        body.dark-mode .text-dark { color: var(--dm-text) !important; }
+        body.dark-mode .text-body { color: var(--dm-text) !important; }
+        body.dark-mode .form-section-title { color: var(--dm-text-muted); border-bottom-color: var(--dm-border); }
+        body.dark-mode .alunos-pag-info { color: var(--dm-text-muted); }
+        body.dark-mode .auth-security,
+        body.dark-mode .ajuda-serie-icone { color: var(--dm-text-muted); }
+        body.dark-mode .log-atividade-acao { color: var(--dm-text); }
+
+        /* Tabelas */
+        body.dark-mode .table {
+            color: var(--dm-text);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .table > :not(caption) > * > * {
+            background-color: transparent;
+            color: var(--dm-text);
+            border-bottom-color: var(--dm-border);
+            box-shadow: none;
+        }
+        body.dark-mode .table-bordered,
+        body.dark-mode .table-bordered > :not(caption) > * {
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .tabela-app thead th {
+            background: var(--dm-bg-elevated-2);
+            color: var(--dm-heading);
+            border-bottom-color: var(--dm-border) !important;
+        }
+        body.dark-mode .tabela-app tbody tr:nth-child(even) { background: rgba(255,255,255,.025); }
+        body.dark-mode .tabela-app tbody tr:hover { background: rgba(96,165,250,.1); }
+        body.dark-mode .tabela-app td { border-color: var(--dm-border) !important; }
+        body.dark-mode .tabela-notas thead th.th-metadado { color: var(--dm-text-muted); }
+
+        /* Formulários */
+        body.dark-mode .form-control,
+        body.dark-mode .form-select {
+            background-color: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text);
+        }
+        body.dark-mode .form-control::placeholder { color: var(--dm-text-muted); opacity: 1; }
+        body.dark-mode .form-control:focus,
+        body.dark-mode .form-select:focus {
+            background-color: var(--dm-bg-elevated-2);
+            color: var(--dm-text);
+            border-color: var(--dm-accent);
+            box-shadow: 0 0 0 .2rem rgba(96,165,250,.25);
+        }
+        body.dark-mode .form-control:disabled,
+        body.dark-mode .form-control[readonly],
+        body.dark-mode .form-select:disabled {
+            background-color: var(--dm-bg-elevated);
+            color: var(--dm-text-muted);
+        }
+        body.dark-mode .form-label,
+        body.dark-mode .form-check-label { color: var(--dm-text); }
+        body.dark-mode .input-group-text {
+            background-color: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text-muted);
+        }
+
+        /* Modais */
+        body.dark-mode .modal-content {
+            background-color: var(--dm-bg-elevated);
+            color: var(--dm-text);
+            border: 1px solid var(--dm-border);
+        }
+        body.dark-mode .modal-header,
+        body.dark-mode .modal-footer { border-color: var(--dm-border); }
+        body.dark-mode .btn-close { filter: invert(1) grayscale(100%) brightness(1.8); }
+
+        /* Listas e dropdowns */
+        body.dark-mode .list-group-item {
+            background-color: var(--dm-bg-elevated);
+            color: var(--dm-text);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .dropdown-menu {
+            background-color: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .dropdown-item { color: var(--dm-text); }
+        body.dark-mode .dropdown-item:hover,
+        body.dark-mode .dropdown-item:focus { background-color: rgba(96,165,250,.15); color: var(--dm-text); }
+        body.dark-mode .dropdown-divider { border-color: var(--dm-border); }
+
+        /* Fundos utilitários claros usados como cartão/superfície */
+        body.dark-mode .bg-white { background-color: var(--dm-bg-elevated-2) !important; }
+        body.dark-mode .bg-light { background-color: var(--dm-bg-elevated-2) !important; }
+        body.dark-mode .btn-light {
+            background-color: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text);
+        }
+        body.dark-mode .btn-outline-secondary { color: var(--dm-text-muted); border-color: var(--dm-border); }
+        body.dark-mode .btn-outline-secondary:hover { background-color: var(--dm-bg-elevated-2); color: var(--dm-text); }
+
+        /* Bordas e divisores genéricos */
+        body.dark-mode .border { border-color: var(--dm-border) !important; }
+        body.dark-mode hr { border-color: var(--dm-border); opacity: .5; }
+
+        /* Componentes específicos deste sistema */
+        body.dark-mode .ajuda-serie-popover {
+            background: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text-muted);
+        }
+        body.dark-mode .log-atividade-linha,
+        body.dark-mode .lixeira-linha { border-bottom-color: var(--dm-border); }
+        body.dark-mode .pagination-custom .page-link {
+            background: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .pagination-custom .page-link:hover { background: var(--dm-bg-elevated); }
+        body.dark-mode .pagination-custom .page-item.disabled .page-link {
+            background: var(--dm-bg-elevated);
+            border-color: var(--dm-border);
+            color: #4b5768;
+        }
+        body.dark-mode .alunos-pag-footer { border-top-color: var(--dm-border); }
+        body.dark-mode .student-photo-preview { background: var(--dm-bg-elevated-2); }
+        body.dark-mode .photo-upload-btn { border-color: var(--dm-bg-elevated); }
+        body.dark-mode .status-online-dot { border-color: var(--dm-bg-elevated); }
+        body.dark-mode #painel-notas-container.notas-bloqueadas { opacity: .45; }
+        body.dark-mode .sidebar-util-block { background: rgba(255,255,255,0.03); }
+
+        /* --- Buscativa: cartões de contato --- */
+        body.dark-mode .buscativa-card {
+            background: var(--dm-bg-elevated);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .buscativa-card:hover { border-color: var(--dm-accent); }
+        body.dark-mode .buscativa-img { border-color: var(--dm-border); }
+
+        /* --- Alunos / Usuários / Chamada: cartões em telas pequenas --- */
+        body.dark-mode .tabela-alunos tr,
+        body.dark-mode .tabela-usuarios tr,
+        body.dark-mode .tabela-chamada tr {
+            background: var(--dm-bg-elevated);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .aluno-td-serie,
+        body.dark-mode .aluno-td-matricula,
+        body.dark-mode .aluno-td-telefone,
+        body.dark-mode .chamada-ra { color: var(--dm-text-muted); }
+        body.dark-mode .aluno-td-serie::before,
+        body.dark-mode .aluno-td-matricula::before,
+        body.dark-mode .aluno-td-telefone::before { color: var(--dm-text); }
+        body.dark-mode .aluno-td-serie,
+        body.dark-mode .aluno-td-acoes { border-top-color: var(--dm-border) !important; }
+
+        /* --- Notas & Atividades: inputs de nota, linhas dinâmicas, validação --- */
+        body.dark-mode .input-nota {
+            background: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border) !important;
+            color: var(--dm-heading);
+        }
+        body.dark-mode .input-nota::placeholder { color: #5b6b82; }
+        body.dark-mode .input-data-sub {
+            background: var(--dm-bg-elevated-2) !important;
+            border-color: var(--dm-border) !important;
+            color: var(--dm-text-muted) !important;
+        }
+        body.dark-mode .input-data-sub:hover,
+        body.dark-mode .input-data-sub:focus { background: var(--dm-bg-elevated) !important; }
+        body.dark-mode .col-aulao { background: rgba(255,255,255,.02); }
+        body.dark-mode .col-validacao { background: rgba(217,154,78,.08); }
+        body.dark-mode .col-validacao .input-nota { background: var(--dm-bg-elevated-2); }
+        body.dark-mode .linha-dinamica {
+            background: rgba(255,255,255,.03);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .linha-dinamica:hover { border-color: var(--dm-accent); }
+        body.dark-mode .data-chip i { color: var(--dm-text-muted); }
+
+        /* --- Calendário de presença --- */
+        body.dark-mode .presenca-calendar { background: var(--dm-bg-elevated); border-color: var(--dm-border); }
+        body.dark-mode .calendar-weekday {
+            background: var(--dm-bg-elevated-2);
+            color: var(--dm-text-muted);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .calendar-day {
+            background: var(--dm-bg-elevated);
+            color: var(--dm-text);
+            border-color: var(--dm-border);
+        }
+        body.dark-mode .calendar-day:hover { background: rgba(96,165,250,.08); }
+        body.dark-mode .calendar-day.other-month { background: var(--dm-bg-elevated-2); color: #4b5768; }
+        body.dark-mode .calendar-selected { background: rgba(96,165,250,.16) !important; }
+        body.dark-mode .calendar-rate,
+        body.dark-mode .calendar-legend,
+        body.dark-mode .summary-card .summary-label,
+        body.dark-mode .calendar-detail-empty { color: var(--dm-text-muted); }
+        body.dark-mode .calendar-detail-stat,
+        body.dark-mode .calendar-detail-hint { border-color: var(--dm-border); }
+
+        /* --- Guias (Chamada / Plantão / Resumo / Frequência) --- */
+        body.dark-mode #presencaTabs { background: var(--dm-bg-elevated-2); }
+        body.dark-mode #presencaTabs .nav-link { color: var(--dm-text-muted); }
+        body.dark-mode #presencaTabs .nav-link:hover:not(.active) { background: rgba(255,255,255,.06); }
+        body.dark-mode #presencaTabs .nav-link.active {
+            background: var(--dm-bg-elevated);
+            color: var(--dm-heading);
+        }
+
+        /* --- Coluna de matéria fixa (Notas) e usuários em telas pequenas --- */
+        body.dark-mode .tabela-notas th.th-materia,
+        body.dark-mode .tabela-notas td.col-materia,
+        body.dark-mode .tabela-notas thead th.th-materia {
+            background: var(--dm-bg-elevated-2);
+        }
+        body.dark-mode .aviso-arraste-tabela { color: var(--dm-text-muted); }
+
+        /* --- Relatórios / PDF: chips de categorias ativas/inativas --- */
+        body.dark-mode .toggle-categoria {
+            background: var(--dm-bg-elevated-2);
+            border-color: var(--dm-border);
+            color: var(--dm-text-muted);
+        }
+        body.dark-mode .toggle-categoria i { color: var(--dm-text-muted); }
+        body.dark-mode .toggle-categoria:hover { border-color: var(--dm-accent); }
+        body.dark-mode .toggle-categoria.ativo {
+            background: rgba(96,165,250,.14);
+            border-color: var(--dm-accent);
+            color: var(--dm-heading);
+        }
+        body.dark-mode .toggle-categoria.ativo i,
+        body.dark-mode .toggle-categoria .fa-check-circle { color: var(--dm-accent); }
+        body.dark-mode .badge-nee {
+            background-color: rgba(96,165,250,.16);
+            color: var(--dm-heading);
+            border-color: var(--dm-border);
+        }
     </style>
 </head>
 <body>
+<script>
+    // Aplica o modo noturno o quanto antes (antes da 1ª pintura da tela)
+    // para evitar o "flash" de tela clara ao carregar a página.
+    (function aplicarTemaSalvoAntesDoRender() {
+        try {
+            if (localStorage.getItem('modoNoturno') === '1') {
+                document.body.classList.add('dark-mode');
+                var metaTema = document.querySelector('meta[name="theme-color"]');
+                if (metaTema) metaTema.setAttribute('content', '#0f172a');
+            }
+        } catch (e) { /* localStorage indisponível: mantém modo claro padrão */ }
+    })();
+</script>
 
 <!-- Aviso rápido de "salvo" / "erro ao salvar", usado na Chamada e no Plantão -->
 <div id="toast-salvo" class="toast-salvo" role="status" aria-live="polite">
@@ -1454,6 +1815,9 @@
         </button>
         <i class="fas fa-graduation-cap"></i>
         <span class="mobile-topbar-title">Gestão Escolar</span>
+        <button type="button" class="mobile-topbar-theme-btn" onclick="alternarModoNoturno()" aria-label="Alternar modo noturno">
+            <i id="theme-toggle-icon-mobile" class="fas fa-moon"></i>
+        </button>
     </div>
     <div class="sidebar-overlay-mobile" onclick="fecharSidebarMobile()"></div>
     <div class="row">
@@ -1486,6 +1850,15 @@
                     <a class="nav-link" href="#" onclick="showSection('usuarios', this)"><i class="fas fa-users-gear me-2"></i> Usuários</a>
                 </li>
                 <li class="nav-item mt-4 pt-2">
+                    <div class="sidebar-util-block">
+                        <div class="sidebar-util-label">Aparência</div>
+                        <button type="button" class="theme-toggle-btn sidebar-util-link" onclick="alternarModoNoturno()" title="Alternar modo claro/escuro">
+                            <i id="theme-toggle-icon" class="fas fa-moon"></i>
+                            <span id="theme-toggle-texto">Modo noturno</span>
+                            <span class="theme-toggle-switch ms-auto"></span>
+                        </button>
+                    </div>
+                    <div class="sidebar-divider"></div>
                     <div class="sidebar-util-block">
                         <div class="sidebar-util-label">Conta</div>
                         <div id="indicador-conta" class="sidebar-status-line sidebar-status-success">
@@ -2875,6 +3248,29 @@
         await supabaseClient.auth.signOut();
         location.reload();
     }
+
+    // --- MODO NOTURNO ---
+    function atualizarIconeModoNoturno() {
+        const ativo = document.body.classList.contains('dark-mode');
+        const icone = document.getElementById('theme-toggle-icon');
+        const iconeMobile = document.getElementById('theme-toggle-icon-mobile');
+        const texto = document.getElementById('theme-toggle-texto');
+        if (icone) icone.className = ativo ? 'fas fa-sun' : 'fas fa-moon';
+        if (iconeMobile) iconeMobile.className = ativo ? 'fas fa-sun' : 'fas fa-moon';
+        if (texto) texto.textContent = ativo ? 'Modo claro' : 'Modo noturno';
+    }
+
+    function alternarModoNoturno() {
+        const ativo = document.body.classList.toggle('dark-mode');
+        try { localStorage.setItem('modoNoturno', ativo ? '1' : '0'); } catch (e) {}
+        atualizarIconeModoNoturno();
+        const metaTema = document.querySelector('meta[name="theme-color"]');
+        if (metaTema) metaTema.setAttribute('content', ativo ? '#0f172a' : '#1a365d');
+    }
+
+    // Sincroniza o ícone/texto do botão com o tema já aplicado (o tema em si
+    // é aplicado antes do render, ver script logo após a tag <body>).
+    document.addEventListener('DOMContentLoaded', atualizarIconeModoNoturno);
 
     async function sair() {
         pararPresencaOnline();
