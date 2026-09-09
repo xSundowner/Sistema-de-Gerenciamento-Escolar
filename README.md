@@ -1,12 +1,5 @@
 # 🎓 Sistema de Gestão Escolar
 
-> Solução complementar, leve, responsiva e de baixo custo para a administração da **Educação de Jovens e Adultos (EJA)**.
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Architecture](https://img.shields.io/badge/architecture-SPA-emerald.svg)
-![Hosting](https://img.shields.io/badge/hosting-GitHub%20Pages-black.svg)
-![Database](https://img.shields.io/badge/database-Supabase%20PostgreSQL-green.svg)
-
 ---
 
 ## 📌 Sobre o Projeto
